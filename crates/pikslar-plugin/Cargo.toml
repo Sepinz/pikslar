@@ -1,0 +1,14 @@
+[package]
+name = "pikslar-plugin"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Plugins: a strict manifest, capabilities shown at install, a content hash, and files only through the user's pickers."
+
+[dependencies]
+pikslar-api = { path = "../pikslar-api" }
+pikslar-core = { path = "../pikslar-core" }
+pikslar-json = { path = "../pikslar-json" }
+
+[lints]
+workspace = true

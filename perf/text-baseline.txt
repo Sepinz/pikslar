@@ -1,0 +1,18 @@
+# Baseline of typing into the text tool (`pikslar-bench text-check`). SYNTHETIC timing: one
+# process, the path of one key from `rasterize` to the pixels ready to present, with no input,
+# message loop or presentation. It is not physical-input latency (see the latency harness).
+# `text-update` appends the lines that are missing and never rewrites one that exists.
+# Recorded 2026-11-19 on the development machine (Windows 11, the machine of perf/baseline.txt)
+# at wip/gauge, release build, otherwise idle. 64 keys per session at text sizes 1, 2, 4 and 8
+# on a 512 canvas; key_median is over every key of five sessions after a warm-up session,
+# key_worst is the median over those sessions of the slowest key. Each value is the median of
+# five measurements, each in a process of its own.
+# A line passes while it is at most 1.5 times its value plus 0.25 ms (text_gate::TIME_RATIO).
+text_synthetic_s1_key_median_ms 0.369 ms
+text_synthetic_s1_key_worst_ms 0.455 ms
+text_synthetic_s2_key_median_ms 0.404 ms
+text_synthetic_s2_key_worst_ms 0.458 ms
+text_synthetic_s4_key_median_ms 0.484 ms
+text_synthetic_s4_key_worst_ms 0.562 ms
+text_synthetic_s8_key_median_ms 0.665 ms
+text_synthetic_s8_key_worst_ms 0.994 ms

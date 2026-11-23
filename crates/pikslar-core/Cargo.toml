@@ -1,0 +1,9 @@
+[package]
+name = "pikslar-core"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Document model, tile storage, history and tools. No OS dependencies."
+
+[lints]
+workspace = true

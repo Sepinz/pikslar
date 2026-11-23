@@ -1,0 +1,49 @@
+# Absolute ceilings of the scripting benchmarks, read by `pikslar-bench script-check`.
+# name  hard|soft  ceiling  unit
+# stop_ms: a hostile script is stopped by its limits within 2,000 ms on any document.
+# peak_private_kb: the default script memory (16 MiB) plus twice the larger of the
+# document's largest cel and what the document holds (script_bench::peak_ceiling_kb).
+script_hostile_calls_peak_private_kb hard 16512 KB
+script_hostile_calls_stop_ms hard 2000 ms
+script_hostile_canvas_peak_private_kb hard 147456 KB
+script_hostile_canvas_stop_ms hard 2000 ms
+script_hostile_fills_peak_private_kb hard 65024 KB
+script_hostile_fills_stop_ms hard 2000 ms
+script_hostile_frame_reads_peak_private_kb hard 50583 KB
+script_hostile_frame_reads_stop_ms hard 2000 ms
+script_hostile_frames_peak_private_kb hard 47766 KB
+script_hostile_frames_stop_ms hard 2000 ms
+script_hostile_growth_peak_private_kb hard 65024 KB
+script_hostile_growth_stop_ms hard 2000 ms
+script_hostile_layer_reads_peak_private_kb hard 50583 KB
+script_hostile_layer_reads_stop_ms hard 2000 ms
+script_hostile_layers_peak_private_kb hard 47766 KB
+script_hostile_layers_stop_ms hard 2000 ms
+script_hostile_lines_peak_private_kb hard 65024 KB
+script_hostile_lines_stop_ms hard 2000 ms
+script_hostile_loop_peak_private_kb hard 16512 KB
+script_hostile_loop_stop_ms hard 2000 ms
+script_hostile_map_peak_private_kb hard 49152 KB
+script_hostile_map_stop_ms hard 2000 ms
+script_hostile_memory_peak_private_kb hard 16512 KB
+script_hostile_memory_stop_ms hard 2000 ms
+script_hostile_reads_peak_private_kb hard 65024 KB
+script_hostile_reads_stop_ms hard 2000 ms
+script_hostile_recolor_peak_private_kb hard 47766 KB
+script_hostile_recolor_stop_ms hard 2000 ms
+script_hostile_rects_peak_private_kb hard 65024 KB
+script_hostile_rects_stop_ms hard 2000 ms
+script_hostile_recursion_peak_private_kb hard 16512 KB
+script_hostile_recursion_stop_ms hard 2000 ms
+script_hostile_scatter_peak_private_kb hard 65024 KB
+script_hostile_scatter_stop_ms hard 2000 ms
+script_hostile_small_then_large_peak_private_kb hard 16512 KB
+script_hostile_small_then_large_stop_ms hard 2000 ms
+script_hostile_swatch_edits_peak_private_kb hard 50583 KB
+script_hostile_swatch_edits_stop_ms hard 2000 ms
+script_hostile_timeline_peak_private_kb hard 34340 KB
+script_hostile_timeline_reads_peak_private_kb hard 34340 KB
+script_hostile_timeline_reads_stop_ms hard 2000 ms
+script_hostile_timeline_stop_ms hard 2000 ms
+script_hostile_writes_peak_private_kb hard 65024 KB
+script_hostile_writes_stop_ms hard 2000 ms

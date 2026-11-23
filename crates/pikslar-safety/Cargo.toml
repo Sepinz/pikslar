@@ -1,0 +1,16 @@
+[package]
+name = "pikslar-safety"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "File corpus, malformed input and undo checks. Never part of the distributed program."
+publish = false
+
+[dependencies]
+pikslar-core = { path = "../pikslar-core" }
+pikslar-format = { path = "../pikslar-format" }
+pikslar-render = { path = "../pikslar-render" }
+pikslar-rewind = { path = "../pikslar-rewind" }
+
+[lints]
+workspace = true

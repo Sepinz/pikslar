@@ -1,0 +1,178 @@
+Pikslar 0.9.0-beta.1 release notes
+==================================
+
+Version 0.9.0-beta.1, the first Windows beta. A test build: see
+KNOWN-ISSUES.txt before relying on it for real work.
+
+Free for noncommercial use and sharing: see LICENSE.txt.
+
+
+What Pikslar is
+---------------
+
+A pixel-art editor and animation studio for Windows 10 (1703 or later) and
+Windows 11, 64-bit. It is a small, self-contained program (two files, no
+installer), written from scratch, with no third-party libraries in its own
+code and no network access.
+
+Everything in these notes was checked by automated tests and by scripts that
+drive the real program window, on one Windows 11 computer. No person outside
+development has used this version, and nothing here has been checked on
+Windows 10. "Experimental" below means: built and tested by automation, but
+with less coverage than the rest, or with known gaps.
+
+
+What is new since the RC2 test build
+------------------------------------
+
+RC2 was a small test build: drawing, palette and colour layers, frames with
+onion skin, tags, selections, crash recovery, Pixel Lint and PNG and sheet
+export. Since then:
+
+Export and command line
+- Export GIF, APNG, PNG sequences, indexed PNG, ICO and CUR, scaled by whole
+  numbers, per tag or per layer, and sprite sheets with a JSON description.
+- pikslar-cli.exe, a separate command-line tool for export, palettes and
+  batch scripts. Run "pikslar-cli --help".
+
+Timeline and animation
+- A timeline with every layer against every frame (the cel matrix):
+  select, move, copy and link cels; move and duplicate several frames.
+- Onion skin with its own strength and colours, before and after.
+- A true-size preview inside the main window.
+- Links that share one drawing across layers, holds, tag repeat counts,
+  timing by frame rate, position tweens with easing, and slices.
+
+Layers and canvas
+- Rename, duplicate, merge down, lock and group layers; group opacity and
+  blend; nine blend modes; reference layers (a PNG to trace over, left out
+  of export).
+- Canvas size with an anchor, and crop to the selection.
+
+Tilemaps
+- Tilesets and tilemap layers: paint with tiles, flip them, edit tiles with
+  the pixel tools, and export TMJ (for the Tiled editor) and tile atlases.
+- Automatic tiles (terrains): edge, corner and 47-tile blob rule sets.
+
+Brushes, palette and text
+- Custom brushes captured from a selection, kept in a brush library.
+- Palette: reorder, sort, groups, Oklab colour ramps, lossless remaps,
+  replace colour, and GIMP (.gpl), JASC (.pal) and hex palette files.
+- A text tool with two built-in pixel fonts, sizes 1 to 8, several lines
+  and alignment, as live text that can still be moved before it is applied.
+
+Importing
+- EXPERIMENTAL: read-only import of Aseprite files (.ase, .aseprite):
+  frames, layers, groups, tags, palettes, tilesets and tilemaps, with a
+  warning for anything left out or changed. Pikslar never writes these
+  files. Checked against openly licensed test files only; files from
+  real projects may show differences. An optional "Aseprite-compatible"
+  blending per document makes imported art look as it did there.
+
+Scripting and plugins
+- EXPERIMENTAL: a small scripting language of Pikslar's own, run from the
+  Scripts panel or pikslar-cli, limited in time and memory, that cannot
+  reach your files except through a file you pick in a Windows dialog.
+- EXPERIMENTAL: plugins (a folder of scripts with a manifest), installed only
+  after you review what they ask for. A plugin's fingerprint detects changes
+  to its files, but it does not prove who made the plugin. Only what the
+  documented scripting interface offers is supported.
+
+Rewind
+- EXPERIMENTAL: an optional undo history kept after closing (View menu,
+  off unless you turn it on), so you can reopen a project and undo past the
+  point where you opened it. Tested by killing the program and by damaged
+  files, on one disk; not tested against power loss.
+
+The Lightbox interface
+- A new interface: workspaces (Draw, Animate, Tiles, Palette and others),
+  docked panels that fold to strips and rails, a menu bar, a context bar
+  for the current tool, and the Lightbox look in dark colours.
+- Keyboard use throughout: Tab walks every control, menus and dialogs work
+  from the keyboard, and a keyboard cursor can draw. Shortcuts can be
+  changed in View, Keyboard shortcuts.
+- Follows Windows high contrast and Windows text size. These were tested
+  through Pikslar's own test switches only, not with the real Windows
+  settings; see KNOWN-ISSUES.txt.
+- Text in names in many scripts, drawn from the system's fonts where the
+  built-in font has no letter.
+
+Saving, made safer in this beta
+-------------------------------
+
+- Saving runs in the background. Ctrl+S takes a copy of the document and the
+  window keeps answering while the file is written. On the largest test
+  document (a 2048 x 2048 tilemap) the window was busy for about 103 ms per
+  save before and under 1 ms now, measured on the development computer.
+- The status bar always says where saving stands: "Unsaved changes",
+  "Saving...", "Saved HH:MM", "Not saved: ..." or "Save failed: ...".
+  "Saved" appears only once the file is in place and has been read back.
+- A save that cannot start says why and what to do, for example "Not saved:
+  close the Export dialog first (Esc)". Ctrl+S is no longer ignored
+  silently while a dialog, menu or name field has the keyboard.
+- A saved project is put in place with Windows' ReplaceFileW, which keeps
+  the file's permissions and other properties, and the previous file is kept
+  as name.piks.pikslar-bak until the new one has been read back. Stopped at
+  any moment, the disk holds the old file or the new one, never neither, on
+  NTFS drives as tested.
+- A project that another program is holding open is tried again for about
+  two seconds, then the save fails with a message and the old file whole.
+- A project changed by another program since you opened or saved it is not
+  saved over without asking: Pikslar offers Overwrite, Save as or Cancel
+  (Cancel is the default).
+- No wait on the window is unbounded any more: while a backup or history is
+  still being written, the status bar says "Still writing the backup..." or
+  "Still writing history..." and the window keeps answering.
+- When Windows signs out, restarts or shuts down, unsaved work is copied to
+  the recovery folder first, also when a dialog is open, and Windows is told
+  "Saving a backup of your work" while that happens. Tested by sending
+  Windows' messages to the program; a real sign-out has not been tested.
+- The recovery copy and its note of which file it belongs to can no longer
+  be mismatched after a crash between the two.
+- Diagnostics: a small saving log and short crash notes, kept on your own
+  computer, never holding artwork or document content, and easy to turn off
+  and delete (see README.txt).
+
+
+Other changes
+-------------
+
+- The program has an icon, version information (pikslar.exe --version, the
+  file's Properties, and the Keyboard shortcuts window), and a manifest
+  declaring Windows 10 and 11, per-monitor scaling and long paths.
+- The release build is reproducible: two builds of the same source on the
+  development computer give byte-identical files. Not yet tried on another
+  computer.
+
+
+What is not done
+----------------
+
+- No person has used this version yet. It is not validated for usability.
+- Windows 10, real Windows scaling and accessibility settings, other
+  keyboard layouts, other computers, pen tablets and screen readers have not
+  been tested. Screen readers are not supported.
+- Not signed, so Windows warns on first start (README.txt).
+- Licensed for noncommercial use only (LICENSE.txt).
+- The full list is in KNOWN-ISSUES.txt.
+
+
+Verification of this build
+--------------------------
+
+TODO: FINAL VERIFICATION RESULTS GO HERE (filled in on the frozen candidate,
+b1-rc1 or later, from the release checklist). Nothing below is a result
+yet. Each line needs its recorded result or "not done":
+
+  Build commit and tag:                          TODO
+  pikslar.exe size and SHA-256:                  TODO
+  Full safety net (tests, lint, gates):          TODO
+  Fault-injection suite and 1,000 kills:         TODO
+  Soak A, B and C (8 hours each), stall run:     TODO
+  Harness interventions in the soaks (must be 0): TODO
+  Workflows W1 to W8:                            TODO
+  Security review (no open Critical or High):    TODO
+  Launch, memory and idle processor use:         TODO
+  Performance exceptions (unchanged or better):  TODO
+  Human validation:                              not done
+  Windows 10:                                    not verified

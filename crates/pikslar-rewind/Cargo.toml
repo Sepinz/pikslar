@@ -1,0 +1,13 @@
+[package]
+name = "pikslar-rewind"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Rewind: undo history kept on disk between sessions, per document."
+
+[dependencies]
+pikslar-core = { path = "../pikslar-core" }
+pikslar-format = { path = "../pikslar-format" }
+
+[lints]
+workspace = true

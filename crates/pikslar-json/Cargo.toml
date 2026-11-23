@@ -1,0 +1,9 @@
+[package]
+name = "pikslar-json"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "A small, strict JSON reader and writer, shared by the command line and plugin manifests."
+
+[lints]
+workspace = true

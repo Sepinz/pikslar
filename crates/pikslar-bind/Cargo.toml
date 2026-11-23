@@ -1,0 +1,20 @@
+[package]
+name = "pikslar-bind"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Runs Pikslar scripts on a document: the interpreter bound to the scripting API, one undo step per run."
+
+[dependencies]
+pikslar-api = { path = "../pikslar-api" }
+pikslar-core = { path = "../pikslar-core" }
+pikslar-script = { path = "../pikslar-script" }
+# Only for the capability words a plugin was granted.
+pikslar-plugin = { path = "../pikslar-plugin" }
+
+[dev-dependencies]
+# Saving, to check that a failed run leaves the file byte-identical.
+pikslar-format = { path = "../pikslar-format" }
+
+[lints]
+workspace = true

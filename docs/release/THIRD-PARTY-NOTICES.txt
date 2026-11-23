@@ -1,0 +1,102 @@
+Pikslar 0.9.0-beta.1: third-party notices
+=========================================
+
+Pikslar's own source uses no third-party libraries ("crates"). The program files
+pikslar.exe and pikslar-cli.exe nevertheless contain code that was not written
+for Pikslar, put there by the Rust compiler and the linker. This file lists it.
+
+How this was determined
+-----------------------
+
+Both release program files were linked with a GNU ld link map (-Wl,-Map) on
+2026-11-21 (at commit f885ee0; see docs/b1-packaging.md), with the pinned linker described in
+BUILD.txt: WinLibs GCC 16.2.0 with MinGW-w64 14.0.0 (UCRT), link-self-contained=no.
+The map lists every object file and every archive member the linker took.
+Besides Pikslar's own code and the Rust standard library, it took only:
+
+  From the MinGW-w64 runtime (mingw-w64-crt 14.0.0):
+    crt2.o                                program start-up
+    libmingw32.a: CRT_fp10, _newmode, cinitexe, crt_handler, dllargv,
+      gccmain, merr, mingw_helpers, natstart, pesect, pseudo-reloc,
+      pseudo-reloc-list, tlsmcrt, tlssup, tlsthrd, usermatherr, wildcard,
+      xncommod, xthdloc, xtxtmode
+    libmingwex.a: mingw_matherr
+    libmsvcrt.a (UCRT variant): __initenv, __p___initenv,
+      ucrt___local_stdio_printf_options, ucrt__getmainargs, ucrt_amsg_exit,
+      ucrt_fprintf, ucrt_vfprintf, and import stubs for the Universal CRT
+      (api-ms-win-crt-*.dll, part of Windows)
+  From GCC 16.2.0's runtime library (libgcc):
+    crtbegin.o, crtend.o, libgcc.a: _ctors, libgcc_eh.a: unwind-seh
+
+pikslar-cli.exe takes the same members except a few Universal CRT math import
+stubs. Import stubs for Windows' own DLLs (kernel32, user32, gdi32 and so on)
+only name functions in Windows and carry no third-party code.
+
+No MinGW-w64 or GCC DLL is needed at run time: the import table of each file
+(checked by the release script) names only Windows system DLLs and the
+Universal CRT.
+
+1. The Rust standard library
+----------------------------
+
+Rust 1.98.1 (48a229cea 2026-09-01). The standard library is licensed under the
+Apache License, Version 2.0 or the MIT licence, at your option; copyright the
+Rust Project Developers (https://thanks.rust-lang.org), with parts copyright
+2014 Alex Crichton (library/backtrace) and 2019 The Crossbeam Project Developers
+(library/std/src/sync/mpmc). Unicode data tables in library/core/src/unicode
+are copyright 1991-2024 Unicode, Inc., under the Unicode License v3.
+
+The standard library for this target is built with these crates from crates.io,
+each licensed MIT OR Apache-2.0 except memchr (Unlicense OR MIT, used here under
+MIT): cfg-if, gimli, hashbrown, libc, memchr, rustc-demangle, windows-link, and
+the standard library's own compiler-builtins. The toolchain's library folder
+also holds addr2line, adler2, miniz_oxide and object; each offers the MIT
+licence among its options, and whether any of their code survives linking was
+not checked (link-time optimisation merges all Rust code). Their notices are in the toolchain's
+share/doc/rust/COPYRIGHT-library.html, which this release's documents refer to.
+
+The texts of the MIT licence, the Apache License 2.0 and the Unicode License v3
+follow at the end of this file, copied from the toolchain
+(share/doc/rust/licenses).
+
+2. The MinGW-w64 runtime
+------------------------
+
+The members listed above come from mingw-w64-crt 14.0.0, copyright (c) 2009-2013
+by the mingw-w64 project. They are distributed under the Zope Public License
+(ZPL) Version 2.1, except parts dedicated to the public domain and parts under
+the other notices collected in the project's file
+COPYING.MinGW-w64-runtime/COPYING.MinGW-w64-runtime.txt:
+https://github.com/mingw-w64/mingw-w64/blob/v14.0.0/COPYING.MinGW-w64-runtime/COPYING.MinGW-w64-runtime.txt
+
+The verbatim text of that file follows after section 4. The release script
+refuses to build a distributable package without it. Which of its sections
+apply to each linked member was not checked file by file.
+
+3. The GCC runtime library (libgcc)
+-----------------------------------
+
+crtbegin.o, crtend.o, _ctors and unwind-seh are part of GCC 16.2.0, copyright the
+Free Software Foundation, Inc., licensed under the GNU General Public License
+version 3 or later with the GCC Runtime Library Exception, version 3.1. The
+exception permits distributing a program linked with them under terms of the
+program's own choosing. The texts of the exception and of the GNU GPL version 3
+follow at the end of this file, copied from the Rust toolchain
+(share/doc/rust/licenses).
+
+
+4. Blending arithmetic from Aseprite and pixman
+-----------------------------------------------
+
+Pikslar's "Aseprite-compatible" blending (crates/pikslar-core/src/
+blend_straight.rs and blend_hsl.rs) follows the formulas and rounding of
+Aseprite's src/doc/blend_funcs.cpp (Aseprite commit 9cf3c128), which is
+released under the MIT licence, and the integer helpers MUL_UN8 and DIV_UN8
+that Aseprite takes from the pixman library, which is released under an
+MIT-style licence. Pikslar's code is its own Rust, but because it follows
+that code closely, both notices are included: the verbatim licence file of
+Aseprite's src/doc folder and pixman's COPYING file follow after this section.
+
+The texts of the MIT licence, the Apache License 2.0, the Unicode License v3,
+the GCC Runtime Library Exception 3.1 and the GNU GPL version 3 follow after
+those.

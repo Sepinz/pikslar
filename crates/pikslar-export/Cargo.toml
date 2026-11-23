@@ -1,0 +1,14 @@
+[package]
+name = "pikslar-export"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "What a project exports to: frames, sheets and their descriptions. No window or GPU."
+
+[dependencies]
+pikslar-core = { path = "../pikslar-core" }
+pikslar-render = { path = "../pikslar-render" }
+pikslar-format = { path = "../pikslar-format" }
+
+[lints]
+workspace = true

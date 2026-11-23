@@ -1,0 +1,212 @@
+Pikslar 0.9.0-beta.1 troubleshooting
+====================================
+
+What to do when something goes wrong. %LOCALAPPDATA%\Pikslar is Pikslar's
+own data folder: to open it, press Windows+R, type %LOCALAPPDATA%\Pikslar
+and press Enter.
+
+
+Starting Pikslar
+----------------
+
+"Windows protected your PC" (SmartScreen)
+  Pikslar is not signed, so Windows does not know who made it. First check
+  the zip's SHA-256 checksum against the one you were sent separately
+  (README.txt, step 1). Only if it matches: choose "More info", then
+  "Run anyway". If there is no "Run anyway", see Smart App Control below.
+
+Blocked with no way to run it (Smart App Control)
+  Smart App Control blocks unsigned programs and cannot be overridden for
+  one program. Do NOT turn it off: once off, it can only be turned back on by
+  reinstalling Windows. Pikslar cannot be tested on this computer for now;
+  please tell the person who gave you Pikslar.
+
+Your antivirus warns about or removes pikslar.exe
+  New, unsigned programs are sometimes flagged. Do not add an exclusion or
+  exception, and do not restore the file against your antivirus's advice.
+  Please report the antivirus product, its message and the checksum.
+
+A message about a missing entry point, or "not a valid Win32 application"
+  Your Windows is older than Windows 10 version 1703, or is 32-bit. Pikslar
+  needs 64-bit Windows 10 version 1703 or later, or Windows 11.
+
+Nothing happens when you run "pikslar.exe --version" from a shortcut
+  That is expected: the version is printed only in a terminal. Started from
+  Explorer it shows nothing and exits.
+
+The window opens partly off screen
+  Press Alt+Space, choose Move, use the arrow keys, then Enter.
+
+
+Saving
+------
+
+The status bar says where saving stands:
+
+  Unsaved changes    work not yet saved
+  Saving...          a save is under way; you can keep working
+  Saved HH:MM        the file is in place and was read back at that time
+  Not saved: ...     the save could not start; the message says what to do
+  Save failed: ...   the save was tried and failed; the file on disk is as
+                     it was before
+
+"Not saved: ..."
+  Something has the keyboard, and Pikslar will not save underneath it or
+  close it for you. Do what the message says, then press Ctrl+S again:
+
+    close the Export dialog first (Esc)
+    close the New sprite dialog first (Esc)
+    close Canvas size first (Esc)
+    close Keyboard shortcuts first (Esc)
+    close the Scripts panel first (Esc)
+    close the menu first (Esc)
+    answer the plugin review first (Esc denies it)
+    finish naming the layer first (Enter)   (also tag, slice, group,
+                                             tileset or brush)
+    let go of the mouse button first
+    the moved pixels could not be put down; free some memory and try again
+
+"Save failed: ... is open in another program ..."
+  Another program (an image viewer, a sync or backup tool, an antivirus
+  scan) is holding the file. Pikslar tried for about two seconds. Close the
+  file in the other program, or wait a moment, and save again. Your file on
+  disk is unchanged; your work is still open in Pikslar.
+
+"Save failed: ..." for any other reason
+  Read the reason: a full disk, a read-only file or folder, a folder that
+  was removed, or a file that did not read back correctly. The file on disk
+  is as it was before. Use File, Save As to save to another place (another
+  folder or drive) so your work is safe, then sort out the first place.
+  Do not close Pikslar without saving somewhere.
+
+"... was changed by another program since it was opened or saved here."
+  Another program, a sync service or another Pikslar window wrote the file
+  after you opened it. Pikslar asks before replacing it:
+    Yes      save over it with your version (the other change is lost)
+    No       save your version under another name (both are kept)
+    Cancel   save nothing (the default)
+  If you are not sure what changed it, choose No.
+
+"... was changed by another program while saving, so it was not replaced."
+  The file changed during the save. Nothing was replaced. Save again to be
+  asked what to do.
+
+"Still writing the backup..." or "Still writing history..."
+  A recovery copy or Rewind history is still being written, for example on a
+  slow drive. You can keep working; it finishes by itself.
+
+A file named name.piks.pikslar-bak beside your project
+  Saving keeps your previous file under this name until the new one has been
+  checked, then removes it. If one is left over, a save was interrupted (a
+  crash, a power cut, or a read-back that failed, in which case the message
+  named it). Your project is either the new file or still the old one, and
+  the .pikslar-bak is the previous version. To be safe:
+    1. Open name.piks in Pikslar and check it.
+    2. If it is wrong or will not open, close Pikslar, copy the
+       .pikslar-bak somewhere else, rename the copy to end in .piks, and
+       open that.
+  Do not delete a .pikslar-bak until you are sure you do not need it. The
+  next successful save of that project replaces it.
+
+A file named name.piks.v1.bak or name.piks.v2.bak
+  When you saved a project made by an older Pikslar in the new format, the
+  original was kept under this name. Older versions of Pikslar cannot open
+  the upgraded file, but they can open this one if you rename a copy of it
+  to end in .piks.
+
+
+After a crash
+-------------
+
+"Pikslar closed unexpectedly and kept unsaved work (...). Restore it?"
+  Choose Yes to get your work back, as of a few seconds before the crash.
+  Choose No only if you are sure you do not want it: No deletes the copy.
+  After restoring, the status bar says what happened, for example
+  "Restored. The file has changed since, so Save will ask for a name": the
+  restored work will not overwrite a file that changed in the meantime.
+
+"The recovered work could not be opened: ... The copy was kept at ..."
+  The copy was damaged. It was moved aside, with a name ending in .piks.bad,
+  in %LOCALAPPDATA%\Pikslar\recovery. Keep that file and send a report: it
+  may still be rescued.
+
+"Pikslar closed unexpectedly last time. A short crash note was kept"
+  A crash note was written. Please send a report (below).
+
+No recovery was offered after a crash
+  Recovery copies are made about 8 seconds after a change, so very recent
+  work may not be in one. None is made if Pikslar was started with
+  --no-recovery, or if the recovery folder cannot be written. Look in
+  %LOCALAPPDATA%\Pikslar\recovery for .piks files; close Pikslar first, copy
+  any you find somewhere else and open the copy.
+
+
+A project that will not open
+----------------------------
+
+"This file is damaged: ..."
+  Part of the file could not be read. Where only part is damaged (for
+  example tag or layer names), Pikslar opens the rest, says what was lost,
+  and Save asks for a new name so the damaged original is kept. If the file
+  will not open at all, look beside it for name.piks.pikslar-bak or
+  name.piks.v1.bak / .v2.bak (above), and send a report.
+
+"... a newer project version"
+  The file was saved by a newer Pikslar than this one. Open it in that
+  version. This version never changes such a file.
+
+An Aseprite file looks different
+  Aseprite import is experimental and read-only. Pikslar lists what it left
+  out or changed when the file opens. Please report the difference.
+
+
+Diagnostics: where they are, turning them off, deleting them
+-----------------------------------------------------------
+
+  %LOCALAPPDATA%\Pikslar\log\log.txt     the saving log (newest last)
+  %LOCALAPPDATA%\Pikslar\log\log.1.txt   the log before it
+  %LOCALAPPDATA%\Pikslar\crash\          crash notes, the newest five
+
+Both are plain text; you can open them in Notepad and read every word. They
+hold times, the version, events such as "save ok" or "save fail", how long
+they took, Windows error codes and file names (such as walk.piks, never the
+folder). They never hold artwork, anything in your documents, layer or tag
+names, script text or anything you typed.
+
+  Turn off:  View, "Stop keeping crash and saving notes"
+             (or start Pikslar with --no-diagnostics for one run)
+  Turn on:   View, "Keep crash and saving notes"
+  Delete:    View, "Delete crash and saving notes", or close Pikslar and
+             delete the log and crash folders by hand
+
+
+Sending a report
+----------------
+
+Please send, to the person who gave you Pikslar:
+  1. What you were doing, what you expected and what happened.
+  2. The version: run "pikslar.exe --version" in a terminal, or look at the
+     bottom of View, Keyboard shortcuts.
+  3. Your Windows version (Windows+R, type winver, Enter), and your display
+     scale and keyboard layout if the problem is about how things look or
+     which keys work.
+  4. If there was a crash: the newest file in
+     %LOCALAPPDATA%\Pikslar\crash\.
+  5. If it was about saving, opening or recovery: log.txt (and log.1.txt)
+     from %LOCALAPPDATA%\Pikslar\log\.
+
+Read the files first if you like: they contain file names but no artwork
+and no folder names. Send a project file only if you are happy to share
+that artwork. Nothing is ever sent automatically.
+
+
+Removing everything
+-------------------
+
+  1. Close Pikslar.
+  2. Delete the folder you extracted Pikslar into, and the zip.
+  3. Delete %LOCALAPPDATA%\Pikslar (settings, recovery copies, Rewind
+     history, diagnostics, brushes and plugins).
+
+Your own projects and exports are not touched; delete them yourself if you
+want. Nothing was installed and nothing was written to the registry.

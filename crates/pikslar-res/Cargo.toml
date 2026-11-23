@@ -1,0 +1,9 @@
+[package]
+name = "pikslar-res"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Writes Windows resources (icon, version, manifest) as a COFF object for the GNU linker; build-time only."
+
+[lints]
+workspace = true

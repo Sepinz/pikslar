@@ -1,0 +1,12 @@
+# Absolute ceilings of the text-typing benchmark, read by `pikslar-bench text-check`.
+# name  hard|soft  ceiling  unit
+# SYNTHETIC timing (in-process, no input or presentation path), not physical-input latency.
+# A key takes at most 3 ms, median and worst, at every size: the target of drawing.
+text_synthetic_s1_key_median_ms hard 3 ms
+text_synthetic_s1_key_worst_ms hard 3 ms
+text_synthetic_s2_key_median_ms hard 3 ms
+text_synthetic_s2_key_worst_ms hard 3 ms
+text_synthetic_s4_key_median_ms hard 3 ms
+text_synthetic_s4_key_worst_ms hard 3 ms
+text_synthetic_s8_key_median_ms hard 3 ms
+text_synthetic_s8_key_worst_ms hard 3 ms

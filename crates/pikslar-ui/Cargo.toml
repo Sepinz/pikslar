@@ -1,0 +1,14 @@
+[package]
+name = "pikslar-ui"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Our software-drawn interface toolkit."
+
+[dependencies]
+pikslar-core = { path = "../pikslar-core" }
+pikslar-platform = { path = "../pikslar-platform" }
+pikslar-render = { path = "../pikslar-render" }
+
+[lints]
+workspace = true

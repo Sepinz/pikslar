@@ -1,0 +1,12 @@
+[package]
+name = "pikslar-platform"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "A thin window, input and presentation layer over Win32."
+
+[dependencies]
+pikslar-render = { path = "../pikslar-render" }
+
+[lints]
+workspace = true

@@ -1,0 +1,27 @@
+# Absolute ceilings, read from the built program by spikes/limits.ps1.
+# name  hard|soft  ceiling  unit
+# These are estimates of what stays comfortable. Raising a hard one needs a stated reason
+# in the milestone record.
+launch_median_ms hard 100 ms
+latency_median_128_ms hard 3 ms
+latency_p95_128_ms hard 6 ms
+latency_median_2048_ms hard 3 ms
+latency_p95_2048_ms hard 6 ms
+idle_cpu_percent hard 0 percent
+private_128_mb hard 12 MB
+private_2048_mb hard 60 MB
+stress_open_ms hard 250 ms
+stress_private_mb hard 48 MB
+stress_frame_step_ms hard 4 ms
+# The tilemap stress map (make-stress-map, M10): the stress document's open time and frame
+# step, and the large canvas's memory, as the plan's section 9 sets them.
+stress_map_open_ms hard 250 ms
+stress_map_private_mb hard 60 MB
+stress_map_frame_step_ms hard 4 ms
+ui_draw_ms hard 2 ms
+third_party_crates hard 0 crates
+# Raised from 1024 to 1280 by the owner, 2026-11-13, to 2048 (2 MiB) on 2026-11-14, and to
+# 2304 (2.25 MiB) on 2026-11-16 for the scripting interpreter, and to 2432 (2.375 MiB) on
+# 2026-11-19 after the text tool and keyboard access, keeping panic and backtrace diagnostics:
+# correctness, usability and speed come before size; growth is still measured.
+program_kb soft 2432 KB

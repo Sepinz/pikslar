@@ -1,0 +1,12 @@
+[package]
+name = "pikslar-render"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "CPU compositing and canvas presentation."
+
+[dependencies]
+pikslar-core = { path = "../pikslar-core" }
+
+[lints]
+workspace = true

@@ -1,0 +1,11 @@
+GIMP Palette
+Name: Sunset Glow
+Columns: 4
+# Hand-written fixture, following the GIMP palette description.
+255 128   0	Orange
+ 20  10  60	Deep violet
+  0   0   0
+128 128 128	Mid grey  with  spaces
+
+# a comment between colours
+255 255 255	White

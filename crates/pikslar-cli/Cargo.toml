@@ -1,0 +1,31 @@
+[package]
+name = "pikslar-cli"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Exports Pikslar projects from the command line, without a window or GPU."
+
+[[bin]]
+name = "pikslar-cli"
+path = "src/main.rs"
+
+[dependencies]
+pikslar-core = { path = "../pikslar-core" }
+pikslar-format = { path = "../pikslar-format" }
+pikslar-export = { path = "../pikslar-export" }
+pikslar-api = { path = "../pikslar-api" }
+pikslar-json = { path = "../pikslar-json" }
+pikslar-plugin = { path = "../pikslar-plugin" }
+
+[dev-dependencies]
+# The compositor, to say what an export should look like apart from the export's own code.
+pikslar-render = { path = "../pikslar-render" }
+# Reads the version block back from the built file (tests/resources.rs).
+pikslar-res = { path = "../pikslar-res" }
+
+[lints]
+workspace = true
+
+# Writes version information into the program file (see build.rs).
+[build-dependencies]
+pikslar-res = { path = "../pikslar-res" }

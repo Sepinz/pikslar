@@ -1,0 +1,12 @@
+[package]
+name = "pikslar-format"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "The .piks project format and our own PNG codec."
+
+[dependencies]
+pikslar-core = { path = "../pikslar-core" }
+
+[lints]
+workspace = true

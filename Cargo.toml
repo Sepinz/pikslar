@@ -1,0 +1,52 @@
+[workspace]
+resolver = "2"
+members = ["crates/*"]
+exclude = ["spikes"]
+
+[workspace.package]
+version = "0.9.0-beta.1"
+edition = "2021"
+rust-version = "1.85"
+
+[workspace.lints.clippy]
+unwrap_used = "deny"
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+panic = "abort"
+strip = true
+
+# Build scripts (crates/pikslar/build.rs) as one unit: their link command then names one object
+# instead of dozens, which keeps it short of the length where rustc switches to a response
+# file, whose path is too long for the linker in a deeply nested checkout.
+[profile.dev.build-override]
+codegen-units = 1
+incremental = false
+
+[profile.release.build-override]
+codegen-units = 1
+incremental = false
+
+# Long safety runs: optimised, but with every check left on. Never used to build the program.
+[profile.safety]
+inherits = "release"
+lto = false
+codegen-units = 16
+debug-assertions = true
+overflow-checks = true
+strip = false
+
+# Rarely run code built for size: plugin install and its strict JSON reader.
+[profile.release.package.pikslar-plugin]
+opt-level = "z"
+
+[profile.release.package.pikslar-json]
+opt-level = "z"
+
+# Export planning and writing, built for size but not for the smallest: its encoders and
+# filters live in pikslar-format. CLI exports of the stress document as GIF, APNG, sheet,
+# sequence and Tiled map, and a large PNG, timed the same within run-to-run noise.
+[profile.release.package.pikslar-export]
+opt-level = "s"

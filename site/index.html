@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pikslar — a lightweight pixel-art editor for Windows</title>
+<meta name="description" content="Pikslar is a small, native pixel-art editor and animation studio for Windows, written from scratch in Rust. Layers, animation, onion skin, tilemaps and export in one small program. In beta.">
+<meta name="theme-color" content="#121316">
+<meta name="color-scheme" content="dark">
+<meta name="pikslar-repository" content="">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon.ico" sizes="16x16 32x32 48x48">
+<link rel="canonical" href="./">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Pikslar">
+<meta property="og:title" content="Pikslar — a lightweight pixel-art editor for Windows">
+<meta property="og:description" content="A small, native pixel-art editor and animation studio for Windows, written from scratch in Rust. In beta.">
+<meta property="og:image" content="assets/og.png">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="640">
+<meta property="og:image:alt" content="The Pikslar editor with a pixel-art mushroom house on the canvas, beside the Pikslar name.">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="stylesheet" href="assets/site.css">
+<script src="assets/site.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="./" aria-label="Pikslar home">
+      <img src="assets/mark.svg" alt="" width="28" height="28">
+      <img class="pixel" src="assets/wordmark.svg" alt="" width="78" height="14">
+    </a>
+    <nav class="nav" aria-label="Main">
+      <a href="#features">Features</a>
+      <a class="optional" href="#engineering">Engineering</a>
+      <a class="optional" href="#status">Status</a>
+      <a href="guide.html">Guide</a>
+      <a href="#get">Get Pikslar</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <section class="hero" aria-labelledby="hero-title" style="padding-top: var(--space-6)">
+    <div class="wrap">
+      <p class="eyebrow">Version 0.9.0 beta · Windows · Rust</p>
+      <h1 id="hero-title">A pixel-art studio that stays <em>out of the way</em>.</h1>
+      <p class="lede">Pikslar is a native Windows editor for drawing and animating pixel art. Layers, frames, onion skin, tilemaps and export in one small program that opens its window in about 20 milliseconds.</p>
+      <div class="actions">
+        <a class="button primary notch" href="#get">Get Pikslar</a>
+        <a class="button notch" href="guide.html">Read the guide</a>
+        <span class="note">Beta. No public download yet.</span>
+      </div>
+      <figure class="shot">
+        <img src="assets/img/editor-2x.png" width="1936" height="1042" alt="The Pikslar window: a tool column on the left, a pixel-art mushroom house on the canvas, palette and preview panels on the right, and the timeline below." fetchpriority="high">
+        <figcaption>The Draw workspace at 2× interface scale. Screenshot of the program itself; the artwork was drawn for Pikslar's tests.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section id="features" aria-labelledby="features-title">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="label">What it does</p>
+        <h2 id="features-title">Everything for sprites, nothing in between.</h2>
+        <p>The tools pixel art needs, each made to work on whole pixels, with a timeline that shows every layer against every frame.</p>
+      </div>
+      <div class="cells">
+        <div class="cell"><h3>Pixel-perfect drawing</h3><p>Pencil, eraser, fill, line, rectangle and picker, with pixel-perfect strokes, Line Rhythm for even steps, brush sizes and custom brushes captured from a selection.</p></div>
+        <div class="cell"><h3>Layers and groups</h3><p>Rename, duplicate, merge, lock and group layers. Group opacity, nine blend modes, and reference layers for tracing that never reach an export.</p></div>
+        <div class="cell"><h3>Animation timeline</h3><p>Every layer against every frame. Select, move, copy and link cels, hold drawings, tag frame ranges, time by frame rate, and tween positions with easing.</p></div>
+        <div class="cell"><h3>Onion skin and preview</h3><p>Frames before and after, each with its own strength and colour, and a true-size preview inside the main window.</p></div>
+        <div class="cell"><h3>Selections that move pixels</h3><p>Box, lasso and magic wand; add and subtract; move, flip and rotate the picked-up pixels, then apply or cancel.</p></div>
+        <div class="cell"><h3>Palettes</h3><p>Groups, sorting, Oklab colour ramps, lossless remaps and colour replacement. Reads and writes GIMP, JASC and hex palette files.</p></div>
+        <div class="cell"><h3>Tilemaps</h3><p>Tilesets and tilemap layers with flipped tiles and automatic terrains (edge, corner and 47-tile blob), exported for the Tiled editor.</p></div>
+        <div class="cell"><h3>Undo you can trust</h3><p>Every change is one step, structural edits included. Crash recovery keeps a copy of unsaved work, and saving never leaves the disk without a whole file.</p></div>
+        <div class="cell"><h3>Export</h3><p>PNG, sprite sheets with JSON, PNG sequences, GIF, APNG, indexed PNG, ICO and CUR, scaled by whole numbers, per tag or per layer.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="tour-title">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="label">A closer look</p>
+        <h2 id="tour-title">Built around the canvas.</h2>
+        <p>Docked panels fold to strips when they are not needed, and each workspace keeps its own arrangement.</p>
+      </div>
+
+      <div class="feature">
+        <div class="feature-media"><img src="assets/img/editor-1x.png" width="1382" height="744" loading="lazy" alt="Pikslar at 1× interface scale: the mushroom house on the canvas with the colour, palette and layers panels open."></div>
+        <div class="feature-text">
+          <h3>Workspaces for each kind of work</h3>
+          <p>Draw, Animate, Tiles, Palette and others each arrange the panels for that job. The context bar above the canvas holds only what the current tool needs.</p>
+          <ul><li>Docked panels that fold to strips and rails</li><li>Interface scale follows the display, at whole steps so nothing blurs</li><li>Keyboard shortcuts you can change</li></ul>
+        </div>
+      </div>
+
+      <div class="feature flip">
+        <div class="feature-media"><img src="assets/img/export-1x.png" width="1382" height="744" loading="lazy" alt="The Export dialog over the Pikslar window, with format, frames, layers and scale options."></div>
+        <div class="feature-text">
+          <h3>Export for wherever the sprite is going</h3>
+          <p>One dialog covers single frames, sheets with a JSON description, sequences and animated files. The same exports run from <code>pikslar-cli</code> for build scripts.</p>
+          <ul><li>Whole-number scaling, never resampled</li><li>Per tag or per layer</li><li>Tiled maps and tile atlases</li></ul>
+        </div>
+      </div>
+
+      <div class="feature">
+        <div class="feature-media"><img src="assets/img/contrast-black-1x.png" width="1382" height="744" loading="lazy" alt="Pikslar drawn in Windows high-contrast colours: black surfaces with white outlines and text."></div>
+        <div class="feature-text">
+          <h3>Keyboard first, and high contrast</h3>
+          <p>Tab reaches every control, menus and dialogs work from the keyboard, and a keyboard cursor can draw. Pikslar follows Windows high contrast and Windows text size.</p>
+          <ul><li>Focus is always drawn, in its own colour</li><li>High contrast and large text checked with Pikslar's own test switches; not yet with the real Windows settings</li><li>Screen readers are not supported yet</li></ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="engineering" aria-labelledby="engineering-title">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="label">Engineering</p>
+        <h2 id="engineering-title">Small on purpose.</h2>
+        <p>Pikslar is written from scratch in Rust against the Windows API, with no third-party libraries in its own code. Every change is measured against recorded limits before it is kept.</p>
+      </div>
+      <div class="figures">
+        <div class="figure"><strong>2.9 MB</strong><span>The whole editor, one executable. No installer, runtime or framework.</span></div>
+        <div class="figure"><strong>21 ms</strong><span>Median time from starting the program until its window exists.</span></div>
+        <div class="figure"><strong>≈ 3 ms</strong><span>Median time from input to the change on screen, on 128 and 2048 pixel canvases.</span></div>
+        <div class="figure"><strong>0</strong><span>Third-party crates. Processor use when idle: 0 %.</span></div>
+      </div>
+      <div class="principles">
+        <div><h3>Native, not wrapped</h3><p>A Win32 window drawn by Pikslar's own renderer. Per-monitor scaling, long paths and Windows' own file dialogs.</p></div>
+        <div><h3>Saving that cannot half-happen</h3><p>Ctrl+S copies the document and writes in the background. The new file replaces the old one only after it has been read back, and the previous file is kept until then.</p></div>
+        <div><h3>Measured, every time</h3><p>A performance gate checks drawing, compositing, undo and file speed against recorded limits, and long unattended runs drive the real window to look for leaks and stalls.</p></div>
+        <div><h3>Reproducible</h3><p>Two release builds of the same source give byte-identical files on the development computer.</p></div>
+      </div>
+      <p class="source">Figures measured by automated tests on one Windows 11 development computer with the 0.9.0 beta build. They are not guarantees, and they have not been checked on other computers.</p>
+    </div>
+  </section>
+
+  <section id="status" aria-labelledby="status-title">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="label">Development status</p>
+        <h2 id="status-title">An honest beta.</h2>
+        <p>Pikslar 0.9.0 is the first Windows beta. It is tested by automation, but nobody outside development has used it yet.</p>
+      </div>
+      <div class="table-wrap">
+        <table class="status">
+          <caption class="visually-hidden">What is finished, experimental, untested and not done in Pikslar 0.9.0 beta</caption>
+          <tbody>
+            <tr><th scope="row">Drawing, layers, animation, tilemaps, palettes, export</th><td><span class="pill ok">Done</span> Covered by the automated test suite and window-driving workflows.</td></tr>
+            <tr><th scope="row">Aseprite import, scripting, plugins, Rewind</th><td><span class="pill warn">Experimental</span> Built and tested, with less coverage or known gaps. Aseprite files are read only, never written.</td></tr>
+            <tr><th scope="row">Windows 11</th><td><span class="pill ok">Tested</span> On one computer, by automation.</td></tr>
+            <tr><th scope="row">Windows 10 (1703 or later, 64-bit)</th><td><span class="pill no">Untested</span> Expected to run; not yet tried. Older Windows cannot start it.</td></tr>
+            <tr><th scope="row">Use by real people</th><td><span class="pill no">Not yet</span> Usability testing has not started.</td></tr>
+            <tr><th scope="row">Screen readers, pen tablets</th><td><span class="pill no">Not supported</span> Pen input is under investigation.</td></tr>
+            <tr><th scope="row">Code signing</th><td><span class="pill no">Not signed</span> Windows shows a SmartScreen warning on first start.</td></tr>
+            <tr><th scope="row">Licence</th><td><span class="pill ok">PolyForm Noncommercial 1.0.0</span> Free for noncommercial use, changes and sharing. Commercial use needs permission.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section id="get" aria-labelledby="get-title">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="label">Get Pikslar</p>
+        <h2 id="get-title">Not downloadable yet.</h2>
+        <p>There is no public release. When there is one, it will be listed under the repository's releases with its checksum, and linked here.</p>
+      </div>
+      <div class="split">
+        <div class="panel">
+          <h3>Build it from source</h3>
+          <p class="caption" style="padding:0 0 1rem">Needs Windows 10 or 11 (64-bit), Rust for the <code>x86_64-pc-windows-gnu</code> target and a MinGW-w64 linker. Release packages are built by <code>spikes/make-release.ps1</code>.</p>
+          <pre><code>cargo run --release -p pikslar</code></pre>
+          <p>Open a file directly with <code>pikslar sprite.piks</code> or <code>pikslar image.png</code>. The <a href="guide.html">guide</a> covers the rest.</p>
+          <p class="no-repo">The source repository is not public yet.</p>
+        </div>
+        <div class="panel">
+          <h3>When a release comes</h3>
+          <ul class="prose" style="padding-left:1.1rem">
+            <li>A zip with two files: the editor and the command-line tool.</li>
+            <li>No installation, no administrator rights, no internet connection.</li>
+            <li>A SHA-256 checksum to compare before you run it, since the program is not signed.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="links needs-repo" style="margin-top: var(--space-5)">
+        <a data-repo-path="" href="#get"><strong>Source code</strong><span>Browse the repository</span></a>
+        <a data-repo-path="/releases" href="#get"><strong>Releases</strong><span>None published yet</span></a>
+        <a data-repo-path="/issues" href="#get"><strong>Issues</strong><span>Report a problem</span></a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>Pikslar 0.9.0 beta. PolyForm Noncommercial 1.0.0.</span>
+    <nav aria-label="Footer"><a href="guide.html">Guide</a> · <a href="#status">Status</a> · <a class="needs-repo" data-repo-path="" href="#get">Source</a></nav>
+  </div>
+</footer>
+</body>
+</html>

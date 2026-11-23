@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guide — Pikslar</title>
+<meta name="description" content="How to build, run and use Pikslar 0.9.0 beta: supported Windows versions, first steps, shortcuts, file formats, where Pikslar keeps its files and the command line.">
+<meta name="theme-color" content="#121316">
+<meta name="color-scheme" content="dark">
+<meta name="pikslar-repository" content="">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon.ico" sizes="16x16 32x32 48x48">
+<link rel="canonical" href="guide.html">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Pikslar">
+<meta property="og:title" content="Pikslar guide">
+<meta property="og:description" content="Building, running and using the Pikslar pixel-art editor for Windows.">
+<meta property="og:image" content="assets/og.png">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="640">
+<meta property="og:image:alt" content="The Pikslar editor with a pixel-art mushroom house on the canvas, beside the Pikslar name.">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="stylesheet" href="assets/site.css">
+<script src="assets/site.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="./" aria-label="Pikslar home">
+      <img src="assets/mark.svg" alt="" width="28" height="28">
+      <img class="pixel" src="assets/wordmark.svg" alt="" width="78" height="14">
+    </a>
+    <nav class="nav" aria-label="Main">
+      <a class="optional" href="./#features">Features</a>
+      <a class="optional" href="./#status">Status</a>
+      <a href="guide.html" aria-current="page">Guide</a>
+      <a href="./#get">Get Pikslar</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main" class="wrap doc">
+  <nav class="toc" aria-label="On this page">
+    <ol>
+      <li><a href="#requirements">Requirements</a></li>
+      <li><a href="#build">Build and run</a></li>
+      <li><a href="#first-steps">First steps</a></li>
+      <li><a href="#shortcuts">Shortcuts</a></li>
+      <li><a href="#formats">File formats</a></li>
+      <li><a href="#files">What Pikslar writes</a></li>
+      <li><a href="#command-line">Command line</a></li>
+      <li><a href="#help">Problems and reports</a></li>
+    </ol>
+  </nav>
+
+  <article class="prose">
+    <h1>Pikslar guide</h1>
+    <p>For Pikslar 0.9.0 beta. This is a test version: keep copies of any artwork you care about, and save beta work in a folder of its own.</p>
+
+    <h2 id="requirements">Requirements</h2>
+    <ul>
+      <li>Windows 11, or Windows 10 version 1703 or later, 64-bit (x64). Pikslar has been tested on Windows 11 only; Windows 10 has not been tried yet. Older Windows cannot start it.</li>
+      <li>No installation, administrator rights or internet connection. Pikslar has no network code at all.</li>
+      <li>Not signed yet, so Windows SmartScreen warns the first time it starts. Where Smart App Control is on, unsigned programs cannot run; do not turn it off for Pikslar.</li>
+    </ul>
+
+    <h2 id="build">Build and run</h2>
+    <p>There is no public download yet. To build from source you need Rust for the <code>x86_64-pc-windows-gnu</code> target and a MinGW-w64 linker.</p>
+    <pre><code>cargo run --release -p pikslar</code></pre>
+    <p>The release package (the editor, <code>pikslar-cli.exe</code> and the documents that go with them) is made reproducibly by <code>spikes/make-release.ps1</code>, which pins the toolchain and linker versions it accepts; <code>docs/b1-packaging.md</code> in the repository explains it.</p>
+
+    <h2 id="first-steps">First steps</h2>
+    <ol>
+      <li>Start <code>pikslar.exe</code>. It opens an empty canvas; <kbd>Ctrl</kbd>+<kbd>N</kbd> makes a new one of the size you choose.</li>
+      <li>Draw with the pencil (<kbd>B</kbd>). Right-drag erases, <kbd>Alt</kbd>+click picks a colour, the wheel zooms and <kbd>Space</kbd>-drag pans.</li>
+      <li>Add frames with <kbd>N</kbd>, turn on onion skin with <kbd>O</kbd> and play with <kbd>Enter</kbd>.</li>
+      <li>Save the project with <kbd>Ctrl</kbd>+<kbd>S</kbd>. The status bar says "Saved" only once the file is in place and has been read back.</li>
+      <li>Export with <kbd>Ctrl</kbd>+<kbd>E</kbd> for a frame or <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>E</kbd> for a sprite sheet.</li>
+    </ol>
+    <p>The menus list every command with its shortcut, and View, Keyboard shortcuts lets you change them.</p>
+
+    <h2 id="shortcuts">Shortcuts</h2>
+    <table>
+      <thead><tr><th scope="col">Keys</th><th scope="col">Action</th></tr></thead>
+      <tbody>
+        <tr><td><kbd>B</kbd> <kbd>E</kbd> <kbd>G</kbd> <kbd>I</kbd> <kbd>L</kbd> <kbd>U</kbd></td><td>Pencil, eraser, fill, picker, line, rectangle</td></tr>
+        <tr><td><kbd>M</kbd> <kbd>Q</kbd> <kbd>W</kbd> <kbd>V</kbd></td><td>Select box, lasso, magic wand, move</td></tr>
+        <tr><td><kbd>X</kbd></td><td>Text</td></tr>
+        <tr><td><kbd>[</kbd> <kbd>]</kbd></td><td>Brush size</td></tr>
+        <tr><td><kbd>Ctrl</kbd>+<kbd>Z</kbd>, <kbd>Ctrl</kbd>+<kbd>Y</kbd></td><td>Undo, redo</td></tr>
+        <tr><td><kbd>,</kbd> <kbd>.</kbd></td><td>Previous and next frame</td></tr>
+        <tr><td><kbd>N</kbd> <kbd>D</kbd></td><td>New frame, duplicate frame</td></tr>
+        <tr><td><kbd>Enter</kbd> <kbd>O</kbd></td><td>Play, onion skin</td></tr>
+        <tr><td><kbd>Shift</kbd>+<kbd>H</kbd>, <kbd>R</kbd></td><td>Flip, rotate the selection</td></tr>
+        <tr><td><kbd>Ctrl</kbd>+<kbd>A</kbd>, <kbd>Ctrl</kbd>+<kbd>D</kbd></td><td>Select all, deselect</td></tr>
+      </tbody>
+    </table>
+    <p>The full list is in the repository's README and in the program itself.</p>
+
+    <h2 id="formats">File formats</h2>
+    <table>
+      <thead><tr><th scope="col">Format</th><th scope="col">Open</th><th scope="col">Save or export</th></tr></thead>
+      <tbody>
+        <tr><td>Pikslar project (<code>.piks</code>)</td><td>Yes, including older versions, which are upgraded with a backup kept</td><td>Yes</td></tr>
+        <tr><td>PNG</td><td>Yes</td><td>Frames, sheets with JSON, sequences, indexed PNG, APNG</td></tr>
+        <tr><td>GIF, ICO, CUR</td><td>No</td><td>Export</td></tr>
+        <tr><td>Aseprite (<code>.ase</code>, <code>.aseprite</code>)</td><td>Experimental, read only</td><td>Never</td></tr>
+        <tr><td>Tiled map (<code>.tmj</code>) and tile atlases</td><td>No</td><td>Export</td></tr>
+        <tr><td>Palettes: GIMP <code>.gpl</code>, JASC <code>.pal</code>, hex</td><td>Yes</td><td>Yes</td></tr>
+      </tbody>
+    </table>
+
+    <h2 id="files">What Pikslar writes</h2>
+    <p>Projects and exports go only where you choose. While saving it may briefly write <code>name.piks.pikslar-tmp</code> and <code>name.piks.pikslar-bak</code> beside the project; both are removed when the save ends. Everything else is in <code>%LOCALAPPDATA%\Pikslar\</code>: settings, a recovery copy of unsaved work, Rewind history if you turn it on, a small saving log and short crash notes. The log and notes never hold artwork, document content or anything you type, and can be turned off and deleted from the View menu. Pikslar writes nothing to the registry and nothing beside <code>pikslar.exe</code>.</p>
+    <p>To remove everything, delete the Pikslar folder and <code>%LOCALAPPDATA%\Pikslar</code>. Your projects stay where you saved them.</p>
+
+    <h2 id="command-line">Command line</h2>
+    <table>
+      <thead><tr><th scope="col">Command</th><th scope="col">Does</th></tr></thead>
+      <tbody>
+        <tr><td><code>pikslar.exe drawing.piks</code></td><td>Opens a project, a PNG, or an Aseprite file (read only)</td></tr>
+        <tr><td><code>pikslar.exe --version</code></td><td>Prints the version without opening a window</td></tr>
+        <tr><td><code>pikslar.exe --no-settings</code></td><td>Reads and writes no settings this time</td></tr>
+        <tr><td><code>pikslar.exe --scale N</code></td><td>Forces the interface size, 1 to 4</td></tr>
+        <tr><td><code>pikslar-cli.exe --help</code></td><td>Export, palettes and batch scripts without the window</td></tr>
+      </tbody>
+    </table>
+
+    <h2 id="help">Problems and reports</h2>
+    <p>The release package includes <code>KNOWN-ISSUES.txt</code> and <code>TROUBLESHOOTING.txt</code>, which explain what is known to be missing or untested and how to send a report.</p>
+    <p class="needs-repo">Problems can also be reported as <a data-repo-path="/issues" href="./#get">issues on GitHub</a>.</p>
+  </article>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>Pikslar 0.9.0 beta. PolyForm Noncommercial 1.0.0.</span>
+    <nav aria-label="Footer"><a href="./">Home</a> · <a href="./#status">Status</a> · <a class="needs-repo" data-repo-path="" href="./#get">Source</a></nav>
+  </div>
+</footer>
+</body>
+</html>

@@ -1,0 +1,44 @@
+# Baseline of the scripting benchmarks (`pikslar-bench script-check`). `script-update`
+# appends the lines that are missing and never rewrites one that exists.
+# Recorded 2026-11-17 on the development machine (Windows 11, the machine of perf/baseline.txt)
+# at wip/fu-limits, release build, default limits (ScriptLimits::DEFAULT), as the first
+# record of these lines: the owner asked for scripting benchmarks in the tracked performance
+# gate. Each value is the median of three measurements; each measurement runs every case in a
+# process of its own, with one untimed warm-up run and the median of the timed runs.
+# A line passes while it is at most 1.5 times its value plus 1 ms (script_gate::TIME_RATIO).
+# Spread over five runs: 30 of 35 lines within 1.10 (slowest/fastest), widest 1.40.
+script_bulk_fill_rect_ms 51.572 ms
+script_bulk_fill_whole_ms 109.367 ms
+script_bulk_lines_100_ms 12.095 ms
+script_bulk_map_rect_256_ms 7.567 ms
+script_bulk_read_rect_256_ms 1.513 ms
+script_canvas_ordinary_ms 95.348 ms
+script_first_use_first_ms 0.170 ms
+script_first_use_next_ms 1.512 ms
+script_hostile_calls_stop_ms 267.400 ms
+script_hostile_canvas_stop_ms 314.660 ms
+script_hostile_fills_stop_ms 411.710 ms
+script_hostile_frame_reads_stop_ms 729.481 ms
+script_hostile_frames_stop_ms 198.778 ms
+script_hostile_growth_stop_ms 439.622 ms
+script_hostile_layer_reads_stop_ms 273.341 ms
+script_hostile_layers_stop_ms 722.223 ms
+script_hostile_lines_stop_ms 985.403 ms
+script_hostile_loop_stop_ms 141.319 ms
+script_hostile_map_stop_ms 798.048 ms
+script_hostile_memory_stop_ms 22.771 ms
+script_hostile_reads_stop_ms 277.313 ms
+script_hostile_recolor_stop_ms 42.233 ms
+script_hostile_rects_stop_ms 420.901 ms
+script_hostile_recursion_stop_ms 1.489 ms
+script_hostile_scatter_stop_ms 160.863 ms
+script_hostile_small_then_large_stop_ms 27.311 ms
+script_hostile_swatch_edits_stop_ms 724.634 ms
+script_hostile_timeline_reads_stop_ms 410.124 ms
+script_hostile_timeline_stop_ms 380.532 ms
+script_hostile_writes_stop_ms 373.573 ms
+script_map_ordinary_ms 1.560 ms
+script_ordinary_stress_ms 3.019 ms
+script_pixels_1024_large_ms 115.499 ms
+script_pixels_256_large_ms 7.588 ms
+script_timeline_ordinary_ms 12.249 ms

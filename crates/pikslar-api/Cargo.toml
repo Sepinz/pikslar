@@ -1,0 +1,16 @@
+[package]
+name = "pikslar-api"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "The versioned scripting API: script operations over Pikslar's commands, one undo step per run."
+
+[dependencies]
+pikslar-core = { path = "../pikslar-core" }
+
+[dev-dependencies]
+# Saving and opening, to check ids and bytes across a file.
+pikslar-format = { path = "../pikslar-format" }
+
+[lints]
+workspace = true

@@ -1,0 +1,9 @@
+[package]
+name = "pikslar-script"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Pikslar's own small scripting language: fuel, a hard memory cap and no ambient access."
+
+[lints]
+workspace = true

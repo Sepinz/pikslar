@@ -1,0 +1,18 @@
+[package]
+name = "pikslar-bench"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Performance and memory regression gate."
+publish = false
+
+[dependencies]
+pikslar-core = { path = "../pikslar-core" }
+pikslar-render = { path = "../pikslar-render" }
+pikslar-format = { path = "../pikslar-format" }
+pikslar-export = { path = "../pikslar-export" }
+pikslar-bind = { path = "../pikslar-bind" }
+pikslar-rewind = { path = "../pikslar-rewind" }
+
+[lints]
+workspace = true

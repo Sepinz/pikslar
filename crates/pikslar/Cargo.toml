@@ -1,0 +1,34 @@
+[package]
+name = "pikslar"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "A lightweight pixel art editor and animation studio."
+
+[dependencies]
+pikslar-core = { path = "../pikslar-core" }
+pikslar-render = { path = "../pikslar-render" }
+pikslar-format = { path = "../pikslar-format" }
+pikslar-export = { path = "../pikslar-export" }
+pikslar-platform = { path = "../pikslar-platform" }
+pikslar-ui = { path = "../pikslar-ui" }
+pikslar-bind = { path = "../pikslar-bind" }
+pikslar-plugin = { path = "../pikslar-plugin" }
+pikslar-api = { path = "../pikslar-api" }
+pikslar-rewind = { path = "../pikslar-rewind" }
+
+[lints]
+workspace = true
+
+# Test-only fault injection (src/fault.rs): off by default, so a release build has none of it.
+# Build with `--features fault-injection` for the stall experiments in spikes/.
+[features]
+fault-injection = []
+
+[dev-dependencies]
+pikslar-script = { path = "../pikslar-script" }
+pikslar-res = { path = "../pikslar-res" }
+
+# Writes the icon, version information and manifest into the program file (see build.rs).
+[build-dependencies]
+pikslar-res = { path = "../pikslar-res" }
