@@ -319,3 +319,40 @@ fn a_stored_stroke_that_split_a_shared_drawing_shares_it_again_when_undone() {
         .is_some_and(|(a, b)| std::sync::Arc::ptr_eq(a, b));
     assert!(same, "the two frames show one drawing again, as in memory");
 }
+
+/// Review finding M1 (RC3): undo that takes steps back from disk never trims redo, so it
+/// stops once memory is over the budget, at most one step past it. Refused, nothing changes;
+/// redo still reaches the newest state exactly.
+#[test]
+fn steps_are_taken_back_only_while_memory_is_within_the_budget() {
+    let (mut e, states) = busy();
+    let depth = e.history().undo_depth() as u64;
+    let steps = walk(&mut e, 0);
+    let mut reopened = Editor::with_undo_budget(e.doc().clone(), 1);
+    reopened.rebase_rewind(depth);
+    let mut taken = 0;
+    for (_, step) in steps {
+        let before = seen(&reopened);
+        match reopened.push_older(step) {
+            Ok(()) => {
+                taken += 1;
+                reopened.apply(StepCmd::Undo).expect("undo");
+            }
+            Err(refused) => {
+                assert_eq!(refused, RewindRefusal::Full);
+                assert_eq!(seen(&reopened), before, "a refusal changes nothing");
+                break;
+            }
+        }
+    }
+    assert_eq!(taken, 1, "one step, then the budget is spent");
+    assert!(reopened.history().is_over_budget());
+    for _ in 0..taken {
+        reopened.apply(StepCmd::Redo).expect("redo");
+    }
+    assert_eq!(
+        *reopened.doc(),
+        states[depth as usize],
+        "back to the newest work"
+    );
+}

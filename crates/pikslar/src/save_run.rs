@@ -25,7 +25,7 @@ use crate::outside::{Outside, Seen};
 use crate::rewind_link::RewindBefore;
 use crate::save_keys::SaveBlocker;
 use pikslar_core::{Document, SavedCopy};
-use pikslar_format::publish_back::{not_kept, NotKept};
+use pikslar_format::publish_back::NotKept;
 use pikslar_format::upgrade;
 use pikslar_platform::{ask_upgrade, UpgradeChoice, Window};
 use std::path::{Path, PathBuf};
@@ -357,7 +357,11 @@ impl App {
                 let failed = Event::new(job.kind, "fail").took(job.started);
                 note(failed.failed_at(&e).file(&job.path));
                 if !same {
-                    // The document it saved is gone: its failure is not the new one's.
+                    // The document it saved is gone: its failure is not the new one's. A
+                    // backup it kept is still not one a later save may replace.
+                    if let Some(backup) = e.error.not_kept().and_then(NotKept::backup) {
+                        self.backup_unknown(backup);
+                    }
                     let shown = job.path.display();
                     return self.notify_error(format!("Could not save {shown}: {}", e.error));
                 }
@@ -371,22 +375,22 @@ impl App {
     /// read back and could not be put back), the file is taken as this session saw it last, so
     /// the next save does not blame another program.
     pub(crate) fn save_ended_failed(&mut self, path: &Path, error: FileError) {
-        let changed = match &error {
-            FileError::Format(f) => not_kept(f).is_some_and(NotKept::target_changed),
-            _ => false,
-        };
+        let kept = error.not_kept();
         let own = self
             .path
             .as_deref()
             .is_some_and(|p| files::same_file(p, path));
-        if changed && own {
+        if own && kept.is_some_and(NotKept::target_changed) {
             self.seen = Seen::of(path, None);
         }
+        // Also a replace that failed and could not put the original back: the file is gone,
+        // and the original waits at its backup name.
+        if own && (kept.is_some_and(NotKept::original_gone) || !path.exists()) {
+            self.work_no_longer_saved();
+        }
         // A backup kept for the only good copy is no longer one a save may replace.
-        if let FileError::Format(f) = &error {
-            for kept in not_kept(f).and_then(NotKept::backup).iter() {
-                self.backup_unknown(kept);
-            }
+        if let Some(backup) = kept.and_then(NotKept::backup) {
+            self.backup_unknown(backup);
         }
         let said = error.to_string();
         self.save_failed(said.clone());

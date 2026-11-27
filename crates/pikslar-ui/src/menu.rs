@@ -116,6 +116,20 @@ pub fn menu_with_room(
     items: &[MenuItem<'_>],
     room: i32,
 ) -> MenuResult {
+    menu_grouped(ui, sf, (id, rect), items, room, &[])
+}
+
+/// [`menu_with_room`] with the items in groups: each row in `groups` starts one, and a
+/// one-unit rule inside the top of that row parts it from the row above. The rows keep their
+/// height, so every row stays where [`menu_row`] says.
+pub fn menu_grouped(
+    ui: &mut Ui,
+    sf: &mut Surface<'_>,
+    (id, rect): (u32, Rect),
+    items: &[MenuItem<'_>],
+    room: i32,
+    groups: &[usize],
+) -> MenuResult {
     let back = ui.enter_level(MENU_LEVEL);
     let s = ui.scale;
     crate::chrome::popup(sf, rect, s);
@@ -128,6 +142,14 @@ pub fn menu_with_room(
         if draw_row(ui, sf, (id + n as u32, n), r, item, (room, text_room)) {
             result = MenuResult::Chosen(n);
         }
+    }
+    // Drawn after the rows, so a row's hover face never covers the rule above it.
+    for &n in groups.iter().filter(|&&n| n > first && n < first + visible) {
+        let r = menu_row(rect, n - first, s);
+        sf.fill(
+            Rect::new(r.x + PAD * s, r.y, r.w - 2 * PAD * s, s),
+            theme::rule(),
+        );
     }
     if items.len() > visible {
         draw_scroll_mark(sf, rect, s, (first, visible, items.len()));
@@ -437,6 +459,35 @@ mod tests {
         assert!(colours.contains(&theme::disabled()), "the key is dimmed");
         assert!(!colours.contains(&theme::muted()), "no key at full Muted");
         crate::theme::set(crate::theme::Theme::NORMAL);
+    }
+
+    #[test]
+    fn a_group_starts_under_a_one_unit_rule_and_no_row_moves() {
+        let mut px = Vec::new();
+        let mut sf = surface(&mut px);
+        let rect = menu_rect(1, (10, 10), &ITEMS, SCREEN);
+        let mut ui = ui_at(399, 299);
+        ui.begin();
+        menu_grouped(&mut ui, &mut sf, (100, rect), &ITEMS, 0, &[0, 2]);
+        let at = |x: i32, y: i32| px[(y * 400 + x) as usize];
+        let second = menu_row(rect, 2, 1);
+        let mid = second.x + second.w / 2;
+        assert_eq!(at(mid, second.y), theme::rule(), "a rule above the group");
+        assert_ne!(at(mid, second.y + 1), theme::rule(), "one unit thick");
+        assert_ne!(at(second.x, second.y), theme::rule(), "inset from the edge");
+        let first = menu_row(rect, 1, 1);
+        assert_ne!(
+            at(mid, first.y),
+            theme::rule(),
+            "none where no group starts"
+        );
+        let top = menu_row(rect, 0, 1);
+        assert_ne!(at(mid, top.y), theme::rule(), "none above the first row");
+        assert_eq!(
+            second,
+            Rect::new(rect.x, rect.y + 48, rect.w, 24),
+            "rows keep their place"
+        );
     }
 
     #[test]

@@ -35,7 +35,11 @@ impl App {
             Key::Escape => self.close_export_dialog(),
             Key::Char(digit @ b'1'..=b'5') => {
                 let kind = pikslar_export::Kind::ALL[usize::from(digit - b'1')];
-                self.export_dialog = Some(choice.with_kind(kind));
+                let next = choice.with_kind(kind);
+                if let Some(said) = ExportChoice::changed_by_itself(choice, next, true) {
+                    self.notify(said);
+                }
+                self.export_dialog = Some(next);
                 self.full_canvas |= kind != choice.kind || choice.map;
             }
             // 6 is TMJ, which is there while the document has a tilemap layer.
@@ -207,14 +211,16 @@ fn refuse_stale(path: &Path, members: usize) -> Result<(), String> {
     ))
 }
 
-/// The library's message, in the app's words where it names a command line option.
+/// The library's message, in the app's words: the options as the Export dialog names them, and
+/// "color" as the app spells it (the command line keeps its own words).
 pub(crate) fn app_message(e: ExportError) -> String {
     match e {
         ExportError::OneFrame { .. } => "A PNG holds one frame. Choose This frame".into(),
         other => other
             .to_string()
-            .replace("without --indexed", "without Indexed")
-            .replace("no --indexed", "not Indexed")
-            .replace("--format sequence", "Frames"),
+            .replace("without --indexed", "as RGBA")
+            .replace("or no --indexed", "or RGBA")
+            .replace("--format sequence", "PNG sequence")
+            .replace("colour", "color"),
     }
 }

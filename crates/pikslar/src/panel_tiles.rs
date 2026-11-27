@@ -26,8 +26,20 @@ pub(crate) const TILE_CELL: i32 = 34;
 pub(crate) const HEAD: i32 = 26;
 /// More rows than this scroll.
 const MOST_ROWS: i32 = 3;
-/// The lines the empty panel's two messages may wrap to in the narrowest dock.
-const EMPTY_LINES: i32 = 3;
+/// The button in the empty panel that adds a tilemap layer.
+pub(crate) const ID_ADD_TILEMAP: u32 = ID_TILES + 2;
+/// The lines of message the empty panel keeps room for above its button: "No tileset yet"
+/// fits on one line in the narrowest dock in both faces, so the button costs the panels beside
+/// it no height.
+const EMPTY_LINES: i32 = 1;
+/// The empty panel's button, from the longest label to the shortest; the first that fits.
+const ADD_LABELS: [&str; 3] = ["Add tilemap layer...", "Add tilemap...", "Add..."];
+
+/// The height in units of the empty panel's button: a row of 22, or the Large text letters
+/// with room above and below them.
+fn add_button_h() -> i32 {
+    22.max(empty_ink() + 8)
+}
 
 /// The height in units of one line of the empty panel's letters, descenders included.
 fn empty_ink() -> i32 {
@@ -50,7 +62,7 @@ fn empty_pitch() -> i32 {
 /// panel's wrapped messages in the face in use, whichever is taller, so that Large text never
 /// cuts them off.
 pub(crate) fn body_least() -> i32 {
-    let empty = 4 + (EMPTY_LINES - 1) * empty_pitch() + empty_ink();
+    let empty = 4 + EMPTY_LINES * empty_pitch() + add_button_h();
     (HEAD + TILE_CELL).max(empty)
 }
 
@@ -181,21 +193,36 @@ impl App {
     }
 
     /// The Tiles panel in `body`: its header and terrain row, then as many rows of tiles as fit.
-    /// The empty panel: what it is for and how to get a tileset, in two short lines, each
-    /// wrapped to the panel's width rather than cut short.
-    fn draw_no_tileset(&self, sf: &mut Surface<'_>, body: Rect) {
+    /// The empty panel: what is missing, wrapped to the panel's width rather than cut short,
+    /// and a button that opens the same New tilemap menu as a right click on the Layers +
+    /// button, so the way to a tileset is in plain sight.
+    fn draw_no_tileset(&mut self, sf: &mut Surface<'_>, body: Rect) {
         let (s, ts) = (self.ui.scale, self.ui.text_scale());
         let line = empty_pitch() * s;
         let mut y = body.y + 4 * s;
-        for (words, ink) in [
-            ("No tileset yet", theme::text()),
-            ("Add a tilemap layer", theme::muted()),
-        ] {
-            for part in pikslar_ui::wrap(words, body.w, ts) {
-                let shown = crate::panel_bottom::fit_to_width(&part, body.w, ts);
-                draw_text(sf, body.x, y, &shown, ink, ts);
-                y += line;
-            }
+        for part in pikslar_ui::wrap("No tileset yet", body.w, ts) {
+            let shown = crate::panel_bottom::fit_to_width(&part, body.w, ts);
+            draw_text(sf, body.x, y, &shown, theme::text(), ts);
+            y += line;
+        }
+        let pad = 16 * s;
+        let Some(label) = ADD_LABELS
+            .iter()
+            .find(|l| pikslar_ui::text_width(l, ts) + pad <= body.w)
+        else {
+            return;
+        };
+        let w = pikslar_ui::text_width(label, ts) + pad;
+        let r = Rect::new(body.x, y, w, add_button_h() * s);
+        if r.bottom() > body.bottom() {
+            return;
+        }
+        self.note_hint(r, "Add a tilemap layer: choose its tile size");
+        if pikslar_ui::button(&mut self.ui, sf, ID_ADD_TILEMAP, r, label, false) {
+            let at = (r.x, r.bottom());
+            self.defer(move |a| {
+                a.open_palette_kind(at, crate::frame_menu::MenuKind::NewTilemap);
+            });
         }
     }
 

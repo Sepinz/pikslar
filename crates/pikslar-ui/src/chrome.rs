@@ -579,12 +579,66 @@ mod hc_disabled_tests {
     }
 }
 
-/// The outline of the button Enter takes: the one-unit edge of `r` in Text, its corners left
-/// notched, so it reads as the default without the Accent that means chosen.
+/// The outline of the button Enter takes: a two-unit edge of `r` in Text, its corners left
+/// notched, so it reads as the default without the Accent that means chosen, and by its
+/// thickness where high contrast draws every edge in Text.
 pub fn default_edge(sf: &mut Surface<'_>, r: Rect, s: i32) {
     let c = theme::text();
     sf.fill(Rect::new(r.x + s, r.y, r.w - 2 * s, s), c);
     sf.fill(Rect::new(r.x + s, r.bottom() - s, r.w - 2 * s, s), c);
     sf.fill(Rect::new(r.x, r.y + s, s, r.h - 2 * s), c);
     sf.fill(Rect::new(r.right() - s, r.y + s, s, r.h - 2 * s), c);
+    // A second unit inside it: in high contrast every edge is the text color, so the default
+    // button must differ by its shape, not by a color the others share.
+    let inner = r.inset(s);
+    sf.fill(Rect::new(inner.x + s, inner.y, inner.w - 2 * s, s), c);
+    sf.fill(
+        Rect::new(inner.x + s, inner.bottom() - s, inner.w - 2 * s, s),
+        c,
+    );
+    sf.fill(Rect::new(inner.x, inner.y + s, s, inner.h - 2 * s), c);
+    sf.fill(
+        Rect::new(inner.right() - s, inner.y + s, s, inner.h - 2 * s),
+        c,
+    );
+}
+
+#[cfg(test)]
+mod default_edge_tests {
+    use super::*;
+    use crate::theme::{SystemColors, Theme};
+
+    /// The default button differs from the others by shape, not by a color alone: its edge
+    /// is two units thick in every look, high contrast included (R1, A12).
+    #[test]
+    fn the_default_edge_is_two_units_thick_in_every_look() {
+        let looks = [
+            Theme::NORMAL,
+            Theme::high_contrast(&SystemColors::BLACK),
+            Theme::high_contrast(&SystemColors::WHITE),
+        ];
+        for look in looks {
+            theme::set(look);
+            for s in [1, 2] {
+                let mut px = vec![0u32; 40 * 40];
+                let mut sf = Surface {
+                    px: &mut px,
+                    w: 40,
+                    h: 40,
+                };
+                default_edge(&mut sf, Rect::new(4, 4, 30, 20), s);
+                let at = |x: i32, y: i32| px[(y * 40 + x) as usize];
+                let c = theme::text();
+                for d in 0..2 * s {
+                    assert_eq!(at(19, 4 + d), c, "top, {d} in at {s}x");
+                    assert_eq!(at(4 + d, 14), c, "left, {d} in at {s}x");
+                    assert_eq!(at(33 - d, 14), c, "right, {d} in at {s}x");
+                    assert_eq!(at(19, 23 - d), c, "bottom, {d} in at {s}x");
+                }
+                assert_eq!(at(19, 4 + 2 * s), 0, "no more than two units");
+                assert_eq!(at(4, 4), 0, "the outer corner stays notched");
+            }
+        }
+        theme::set(Theme::NORMAL);
+    }
 }

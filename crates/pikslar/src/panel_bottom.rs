@@ -14,6 +14,10 @@ use std::borrow::Cow;
 
 pub(crate) const ID_TRANSPORT: u32 = 300;
 const ID_REWIND: u32 = 330;
+/// The gap between the words of the status bar, in text pixels: multiplied by the text scale,
+/// not the UI scale, so the normal face keeps the gap it had while Large text and 150 % text
+/// widen it with the words instead of leaving less than a space (R1, found in capture C1).
+const STATUS_GAP: i32 = 12;
 const TRANSPORT_HINTS: [&str; 7] = [
     "Play  Enter",
     "Previous frame  ,",
@@ -71,6 +75,37 @@ impl RewindRow {
             counter,
             status,
         }
+    }
+
+    /// The row when the status words need `need` wide and the counter shows `counter_text`
+    /// wide. Where the words would be cut, the status room grows to the left: first into the
+    /// counter's spare room, then by shortening the bar, never below its least length, and
+    /// last, while the message lasts, by leaving out the counter, which only repeats what the
+    /// bar shows. With room to spare nothing moves, so the bar stays put as it counts.
+    pub(crate) fn needing(area: Rect, s: i32, ts: i32, need: i32, counter_text: i32) -> RewindRow {
+        let mut row = RewindRow::of(area, s, ts);
+        let mut short = need - row.status.w;
+        if short <= 0 {
+            return row;
+        }
+        let (gap, right) = (8 * s, area.right().max(area.x));
+        let from = |x: i32| x.min(right);
+        let spare = (row.counter.w - counter_text).clamp(0, short);
+        short -= spare;
+        let give = short.clamp(0, (row.track.w - BAR_LEAST * s).max(0));
+        short -= give;
+        row.track.w -= give;
+        let counter_w = counter_text.min(row.counter.w);
+        let status_x = if short > 0 {
+            row.counter = Rect::new(from(row.track.right()), row.counter.y, 0, row.counter.h);
+            from(row.track.right() + gap)
+        } else {
+            let x = from(row.track.right() + gap);
+            row.counter = Rect::new(x, row.counter.y, counter_w.min(right - x), row.counter.h);
+            from(row.counter.right() + gap)
+        };
+        row.status = Rect::new(status_x, row.status.y, right - status_x, row.status.h);
+        row
     }
 }
 
@@ -147,7 +182,7 @@ impl App {
     /// The status bar when Rewind lives in the History panel: the frame on the left and the
     /// edit count on the right always, a message in their place while there is one.
     fn draw_idle_status(&mut self, sf: &mut Surface<'_>, area: Rect) {
-        let (s, ts) = (self.ui.scale, self.ui.text_scale());
+        let ts = self.ui.text_scale();
         let text_y = area.y + (area.h - cap_height() * ts) / 2;
         let history = self.editor.history();
         let (undo, total) = (
@@ -164,7 +199,12 @@ impl App {
             theme::muted(),
             ts,
         );
-        let track = Rect::new(area.x, area.y, area.w - counter_w - 12 * s, area.h);
+        let track = Rect::new(
+            area.x,
+            area.y,
+            (area.w - counter_w - STATUS_GAP * ts).max(0),
+            area.h,
+        );
         let said = self.status_text().is_some();
         self.draw_status(sf, track, text_y);
         if said {
@@ -212,14 +252,26 @@ impl App {
             history.undo_depth(),
             history.undo_depth() + history.redo_depth(),
         );
-        let row = RewindRow::of(area, s, ts);
-        // On the label: a hint on the bar would cover the handle being reached for.
-        let label = Rect::new(area.x, area.y, row.track.x - area.x, area.h);
+        // On the label: a hint on the bar would cover the handle being reached for. Noted
+        // before the row is measured, so that the hint it shows is the one measured.
+        let label = Rect::new(
+            area.x,
+            area.y,
+            RewindRow::of(area, s, ts).track.x - area.x,
+            area.h,
+        );
         self.note_hint(
             label,
             "Rewind: drag the bar through every edit you have made",
         );
         let counter = edit_counter(undo, total);
+        let row = RewindRow::needing(
+            area,
+            s,
+            ts,
+            self.status_need(),
+            text_width(counter.as_str(), ts),
+        );
         let counter = fit_to_width(counter.as_str(), row.counter.w, ts);
         draw_text(sf, row.counter.x, text_y, &counter, theme::muted(), ts);
         self.rewind_bar(sf, row.track, (undo, total));
@@ -255,6 +307,24 @@ impl App {
         }
     }
 
+    /// How wide the status words want to be: the save label, its gap and the message or hint,
+    /// each whole. Zero when nothing is said.
+    pub(crate) fn status_need(&self) -> i32 {
+        let ts = self.ui.text_scale();
+        let label = self
+            .save_label()
+            .map_or(0, |l| text_width(&l.text, ts) + STATUS_GAP * ts);
+        let words = self.status_text().map_or(0, |t| {
+            let lead = if self.message_is_error && pikslar_ui::icons::high_contrast() {
+                text_width("! ", ts)
+            } else {
+                0
+            };
+            text_width(t, ts) + lead
+        });
+        label + words
+    }
+
     /// What saving is doing, at the right of `room`, then messages and hints right-aligned in
     /// what is left of it and cut to fit.
     pub(crate) fn draw_status(&mut self, sf: &mut Surface<'_>, room: Rect, text_y: i32) {
@@ -273,7 +343,7 @@ impl App {
         };
         let half = Rect::new(room.x + room.w / 2, room.y, room.w - room.w / 2, room.h);
         let width = self.draw_status_words(sf, half, text_y, (&label.text, "Save"), label.warning);
-        let gap = 12 * self.ui.scale;
+        let gap = STATUS_GAP * self.ui.text_scale();
         Rect::new(room.x, room.y, (room.w - width - gap).max(0), room.h)
     }
 

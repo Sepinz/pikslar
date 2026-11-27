@@ -11,6 +11,7 @@ use pikslar_platform::Window;
 use pikslar_render::{Rect, Surface};
 use pikslar_ui::theme;
 use pikslar_ui::{button, cap_height, draw_text, icon_button_if, text_width, Icon, MENU_LEVEL};
+use std::borrow::Cow;
 
 pub(crate) const ID_EXPORT: u32 = 500;
 /// Rows, buttons and gaps, in interface units.
@@ -20,7 +21,7 @@ const GAP: i32 = 4;
 const MARGIN: i32 = 16;
 /// The words that name each row, which sit in a column at the panel's left.
 const ROW_NAMES: [&str; 8] = [
-    "Format", "Frames", "Range", "Layers", "Colour", "Playback", "Data", "Layout",
+    "Format", "Frames", "Range", "Layers", "Color", "Playback", "Data", "Layout",
 ];
 
 /// Where the next control in a row goes.
@@ -52,6 +53,7 @@ impl App {
         self.row_name(sf, (left, y), "Format");
         let wide = self.names_width();
         next = self.kind_row(sf, next, Flow { x: left + wide, y });
+        let by_kind = next.kind != choice.kind;
         y += ROW * s;
         let right = panel.right() - MARGIN * s;
         if choice.map {
@@ -60,6 +62,9 @@ impl App {
             next = self.detail_rows(sf, next, (left, y), right);
         }
         if next != choice {
+            if let Some(said) = ExportChoice::changed_by_itself(choice, next, by_kind) {
+                self.defer(move |a| a.notify(said));
+            }
             // A shorter panel leaves the canvas under the old one to paint again.
             self.full_canvas |= next.kind != choice.kind
                 || next.map != choice.map
@@ -108,7 +113,7 @@ impl App {
                 self.loop_row(sf, next, Flow { x, y })
             }
             Kind::Png | Kind::Sequence => {
-                self.row_name(sf, (left, y), "Colour");
+                self.row_name(sf, (left, y), "Color");
                 self.indexed_row(sf, next, Flow { x, y })
             }
         }
@@ -228,7 +233,7 @@ impl App {
     fn map_rows(&mut self, sf: &mut Surface<'_>, (left, y): (i32, i32), right: i32) {
         let (s, ts) = (self.ui.scale, self.ui.text_scale());
         let text_y = |row: i32| y + row * ROW * s + (HIGH * s - cap_height() * ts) / 2;
-        let what = "This frame's maps, and an atlas a tileset";
+        let what = "This frame's maps, and an atlas per tileset";
         draw_text(
             sf,
             left,
@@ -355,6 +360,9 @@ impl App {
         let x = at.x + self.stepper_width() - 2 * HIGH * s - GAP * s;
         let minus = Rect::new(x, at.y, HIGH * s, HIGH * s);
         let plus = Rect::new(x + (HIGH + GAP) * s, at.y, HIGH * s, HIGH * s);
+        let (less, more) = stepper_hints(label);
+        self.note_hint_named(minus, &format!("Less {label}"), less);
+        self.note_hint_named(plus, &format!("More {label}"), more);
         at.x = plus.right() + 2 * GAP * s;
         // The minus and plus icons of every other stepper, off at the limit each leads to.
         let mut next = value;
@@ -407,21 +415,23 @@ impl App {
 
     fn indexed_row(&mut self, sf: &mut Surface<'_>, c: ExportChoice, mut at: Flow) -> ExportChoice {
         let s = self.ui.scale;
-        let hint = Rect::new(
-            at.x + self.fit("Full colour") + GAP * s,
+        let rgba = Rect::new(at.x, at.y, self.fit("RGBA"), HIGH * s);
+        let palette = Rect::new(
+            at.x + self.fit("RGBA") + GAP * s,
             at.y,
-            self.fit("Indexed"),
+            self.fit("Palette"),
             HIGH * s,
         );
+        self.note_hint(rgba, "RGBA: every color and alpha as drawn");
         self.note_hint(
-            hint,
-            "Indexed, at most 256 colors, in palette order when all are swatches",
+            palette,
+            "Palette: an indexed PNG of at most 256 colors, in palette order when all are swatches",
         );
         let mut next = c;
-        if self.place(sf, &mut at, 36, "Full colour", !c.indexed) {
+        if self.place(sf, &mut at, 36, "RGBA", !c.indexed) {
             next.indexed = false;
         }
-        if self.place(sf, &mut at, 30, "Indexed", c.indexed) {
+        if self.place(sf, &mut at, 30, "Palette", c.indexed) {
             next.indexed = true;
         }
         next
@@ -447,7 +457,7 @@ impl App {
     ) -> ExportChoice {
         let s = self.ui.scale;
         let x = left + self.names_width();
-        self.row_name(sf, (left, y), "Colour");
+        self.row_name(sf, (left, y), "Color");
         let mut next = self.indexed_row(sf, c, Flow { x, y });
         let y = y + ROW * s;
         self.row_name(sf, (left, y), "Data");
@@ -506,3 +516,16 @@ fn fit_label(label: &str, width: i32, ts: i32) -> String {
 #[cfg(test)]
 #[path = "export_panel_tests.rs"]
 mod tests;
+
+/// What a stepper's minus and plus do, said when the pointer or the keyboard is on them.
+fn stepper_hints(label: &str) -> (Cow<'static, str>, Cow<'static, str>) {
+    match label {
+        "Scale" => ("Smaller scale".into(), "Larger scale".into()),
+        "From" => ("Start a frame earlier".into(), "Start a frame later".into()),
+        "To" => ("End a frame earlier".into(), "End a frame later".into()),
+        _ => (
+            format!("{label}: one less").into(),
+            format!("{label}: one more").into(),
+        ),
+    }
+}

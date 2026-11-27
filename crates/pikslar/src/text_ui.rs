@@ -3,7 +3,7 @@
 //! moves, is one undo step when Enter anchors it. Esc takes it all back.
 
 use crate::app::{App, Gesture};
-use crate::context_bar::CONTROL;
+use crate::context_bar::control;
 use crate::shortcuts::{Action, Binding};
 use pikslar_core::glyphs::{
     caret_position, rasterize_aligned, text_area, Align, Font, MAX_CHARS, MAX_SCALE, MAX_SPACING,
@@ -541,7 +541,7 @@ impl App {
         let end_w = ends.map(|(l, _)| text_width(l, ts) + 14 * s);
         let end_room = end_w.iter().map(|w| w + 4 * s).sum::<i32>() + 4 * s;
         let room = (limit - left - buttons - end_room - 4 * s).max(0);
-        let field = Rect::new(left, y, room.min(48 * em() * ts), CONTROL * s);
+        let field = Rect::new(left, y, room.min(48 * em() * ts), control() * s);
         if field.w >= 8 * em() * ts {
             self.draw_text_field(sf, field, &edit);
             self.draw_text_buttons(sf, field.right() + 4 * s, y, &labels, widths);
@@ -569,7 +569,7 @@ impl App {
         let names = ["Keep text", "Cancel text"];
         let mut x = left;
         for i in 0..2 {
-            let rect = Rect::new(x, y, widths[i], CONTROL * s);
+            let rect = Rect::new(x, y, widths[i], control() * s);
             self.note_hint(rect, hints[i]);
             let id = (ends[i].1, rect);
             if self.bar_button(sf, id, (ends[i].0, names[i]), None) {
@@ -628,7 +628,7 @@ impl App {
         let s = self.ui.scale;
         let mut x = left;
         for i in 0..4 {
-            let rect = Rect::new(x, y, widths[i], CONTROL * s);
+            let rect = Rect::new(x, y, widths[i], control() * s);
             let hint = self.keymap.text_setting_hint(i);
             self.note_hint(rect, hint);
             if button(

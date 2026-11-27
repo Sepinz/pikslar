@@ -10,8 +10,9 @@ use pikslar_render::{Rect, Surface};
 pub const ARROW_ROOM: i32 = 14;
 
 /// Draws a section header in `r`: an arrow pointing down while `open` and right while folded,
-/// then `title`, cut short with an ellipsis when it does not fit, so what is drawn beside the
-/// header is never drawn over. Returns true when it was clicked, to fold or open the section.
+/// then `title` when it fits whole with three units to spare before the header's right edge,
+/// so what is drawn beside the header is never drawn over. Returns true when it was clicked,
+/// to fold or open the section.
 pub fn fold_header(
     ui: &mut Ui,
     sf: &mut Surface<'_>,
@@ -43,10 +44,18 @@ pub fn fold_header(
     let ts = ui.text_scale();
     let y = r.y + (r.h - cap_height() * ts) / 2;
     let x = title_x(r.x, s, ts);
-    let room = r.right() - x - 3 * s;
-    // The title is whole or left out: a stub of dots says nothing, and the tab names the panel.
-    if text_width(title, ts) <= room {
+    let (room, wide) = (r.right() - x - 3 * s, text_width(title, ts));
+    // The title is whole or left out: a stub of dots says nothing, and the tab and the hint
+    // name the section.
+    if !title.is_empty() && wide <= room {
         draw_text(sf, x, y, title, ink, ts);
+        // Named for the tests, which check that a title is shown wherever it fits.
+        if ui.naming() {
+            ui.name_rect(
+                Rect::new(x, y, wide, cap_height() * ts),
+                &format!("Title {title}"),
+            );
+        }
     }
     state.clicked
 }

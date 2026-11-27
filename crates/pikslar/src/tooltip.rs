@@ -63,7 +63,8 @@ impl App {
             .since
             .is_some_and(|since| now >= since + TOOLTIP_DELAY);
         let quiet = !self.ui.down && !self.panel_open() && self.gesture == Gesture::None;
-        if due && quiet && !self.rest.shown && self.hint.is_some() {
+        let pointed = self.hint.is_some() && !self.hint_from_focus;
+        if due && quiet && !self.rest.shown && pointed {
             self.rest.shown = true;
             self.rest.hint.clone_from(&self.hint);
             self.ui_dirty = true;

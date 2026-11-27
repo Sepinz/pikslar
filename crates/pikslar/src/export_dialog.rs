@@ -79,6 +79,38 @@ impl ExportChoice {
         }
     }
 
+    /// What one choice changed in another on its own, said in the status line so that nothing
+    /// changes unseen (R1, A16): the format when "All frames" or "This frame" needs another,
+    /// and the frames when a format needs other frames. None when only what was chosen changed.
+    /// `by_kind` says a format was what was chosen, so the change is named by its frames.
+    pub fn changed_by_itself(before: Self, after: Self, by_kind: bool) -> Option<String> {
+        if before.map || after.map || before.kind == after.kind {
+            return None;
+        }
+        let shown = |c: Self| match c.kind {
+            Kind::Png => FrameChoice::This,
+            _ => c.frames,
+        };
+        let (was, now) = (kind_label(before.kind), kind_label(after.kind));
+        if after.auto_sequence && before.kind == Kind::Png {
+            return Some(format!(
+                "All frames: the format is now {now}, as a {was} holds one frame"
+            ));
+        }
+        if !by_kind && before.auto_sequence && after.kind == Kind::Png {
+            return Some(format!("This frame: the format is {now} again"));
+        }
+        match (shown(before), shown(after)) {
+            (FrameChoice::All, FrameChoice::This) => Some(format!(
+                "{now}: Frames is now This frame, as a {now} holds one frame"
+            )),
+            (FrameChoice::This, FrameChoice::All) => {
+                Some(format!("{now}: Frames is now All frames"))
+            }
+            _ => None,
+        }
+    }
+
     /// "All frames" of a still image: a picture each, as the Frames kind, until "This frame".
     pub fn all_frames_of_still(self) -> Self {
         ExportChoice {
@@ -221,8 +253,8 @@ pub fn place(tags: &[Tag], id: TagId) -> Option<usize> {
 pub fn kind_label(kind: Kind) -> &'static str {
     match kind {
         Kind::Png => "PNG",
-        Kind::Sheet => "Sheet",
-        Kind::Sequence => "Frames",
+        Kind::Sheet => "Sprite sheet",
+        Kind::Sequence => "PNG sequence",
         Kind::Gif => "GIF",
         Kind::Apng => "APNG",
     }
@@ -235,7 +267,7 @@ pub fn kind_hint(kind: Kind) -> &'static str {
         Kind::Sheet => "Every frame in one image, and a .json describing them  2",
         Kind::Sequence => "Each frame its own numbered PNG, and a .json listing them  3",
         Kind::Gif => "An animated GIF, each frame for its duration  4",
-        Kind::Apng => "An animated PNG, every colour and alpha kept  5",
+        Kind::Apng => "An animated PNG, every color and alpha kept  5",
     }
 }
 

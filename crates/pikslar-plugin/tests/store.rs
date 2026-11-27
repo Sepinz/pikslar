@@ -304,17 +304,55 @@ fn a_changed_record_or_a_tampered_capability_grant_is_caught() {
     f.install("1.0.0", &["read-document"]);
     let record = f.installed().join("installed.json");
     let text = fs::read_to_string(&record).expect("record");
-    // Granting itself more in the record without matching files: the manifest disagrees.
+    // Granting itself more in the record: not the record the person approved.
     fs::write(
         &record,
         text.replace("\"read-document\"", "\"read-document\",\"edit-document\""),
     )
     .expect("edit");
-    assert!(matches!(f.store.load(ID), Err(Disabled::Mismatch(_))));
+    assert_eq!(f.store.load(ID).err(), Some(Disabled::NotApproved));
     fs::write(&record, "{not json").expect("edit");
-    assert!(matches!(f.store.load(ID), Err(Disabled::BadRecord(_))));
+    assert_eq!(f.store.load(ID).err(), Some(Disabled::NotApproved));
     fs::write(&record, text.replace("1.0.0", "9.0.0")).expect("edit");
-    assert!(matches!(f.store.load(ID), Err(Disabled::Mismatch(_))));
+    assert_eq!(f.store.load(ID).err(), Some(Disabled::NotApproved));
+    fs::write(&record, &text).expect("put back");
+    assert!(f.store.load(ID).is_ok(), "the approved record loads again");
+}
+
+/// Review finding S1 (RC3): a plugin folder put in place by hand, with a record that matches
+/// its files exactly, was loaded with the permissions it lists, never shown to anyone. Only a
+/// record approved through the install review loads.
+#[test]
+fn a_plugin_folder_placed_by_hand_never_loads_without_the_install_review() {
+    let f = Fixture::new("by-hand");
+    f.install("1.0.0", &["read-document", "edit-document"]);
+    assert!(f.store.load(ID).is_ok());
+    // The same folder, record and all, copied into another Pikslar's plugins folder.
+    let other = Fixture::new("by-hand-other");
+    let into = other.store.folder().expect("a store").join(ID);
+    fs::create_dir_all(&into).expect("dir");
+    for entry in fs::read_dir(f.installed()).expect("listed").flatten() {
+        fs::copy(entry.path(), into.join(entry.file_name())).expect("copied");
+    }
+    assert_eq!(other.store.load(ID).err(), Some(Disabled::NotApproved));
+    let listed = other.store.list();
+    assert!(
+        listed.iter().all(|l| l.state.is_err()),
+        "never listed as enabled"
+    );
+    // Reviewing and approving it makes it the person's own.
+    let src = other.source("reviewed", "1.0.0", &["read-document", "edit-document"]);
+    let pending = other.store.review(&src).expect("review");
+    assert!(matches!(pending.review().change, Change::Repair { .. }));
+    other.store.approve(pending).expect("approved");
+    assert!(other.store.load(ID).is_ok());
+    // Uninstalling forgets the approval: the same folder placed again is not approved.
+    other.store.uninstall(ID).expect("uninstall");
+    fs::create_dir_all(&into).expect("dir");
+    for entry in fs::read_dir(f.installed()).expect("listed").flatten() {
+        fs::copy(entry.path(), into.join(entry.file_name())).expect("copied");
+    }
+    assert_eq!(other.store.load(ID).err(), Some(Disabled::NotApproved));
 }
 
 #[test]
@@ -493,4 +531,53 @@ fn a_record_planted_as_a_junction_after_review_refuses_the_approval() {
         Some(PluginError::ChangedSinceReview),
         "a link where the record was is a change"
     );
+}
+
+/// An upgrade that cannot be put in place (a file of the installed copy held open, as an
+/// editor or a scanner might) leaves the copy from before loading, approval and all.
+#[cfg(windows)]
+#[test]
+fn an_upgrade_that_fails_part_way_keeps_the_reviewed_copy_loading() {
+    use std::os::windows::fs::OpenOptionsExt;
+    let f = Fixture::new("upgrade-fails");
+    f.install("1.0.0", &["read-document"]);
+    let newer = f.source("b", "1.1.0", &["read-document"]);
+    let pending = f.store.review(&newer).expect("upgrade review");
+    let held_name = fs::read_dir(f.installed())
+        .expect("listed")
+        .flatten()
+        .map(|e| e.path())
+        .find(|p| p.is_file())
+        .expect("a file");
+    let held = fs::OpenOptions::new()
+        .read(true)
+        .share_mode(0)
+        .open(&held_name)
+        .expect("held");
+    assert!(f.store.approve(pending).is_err(), "the swap is refused");
+    drop(held);
+    let loaded = f.store.load(ID).expect("the reviewed copy still loads");
+    assert_eq!(loaded.manifest().version, "1.0.0".parse_version());
+}
+
+/// A plugin an earlier build installed, with no approval noted, is repaired by reviewing a copy
+/// of its installed files, without their install record: no source package is needed.
+#[test]
+fn a_plugin_without_an_approval_is_repaired_from_its_own_folder() {
+    let f = Fixture::new("no-approval");
+    f.install("1.0.0", &["read-document"]);
+    let approvals = f.t.join("plugin-approvals.txt");
+    fs::remove_file(&approvals).expect("as an earlier build left it");
+    assert_eq!(f.store.load(ID).err(), Some(Disabled::NotApproved));
+    let copy = f.t.join("copied-out");
+    fs::create_dir_all(&copy).expect("dir");
+    // Its files, without the record an install writes.
+    for entry in fs::read_dir(f.installed()).expect("listed").flatten() {
+        if entry.file_name() != "installed.json" {
+            fs::copy(entry.path(), copy.join(entry.file_name())).expect("copied");
+        }
+    }
+    let pending = f.store.review(&copy).expect("its own files review");
+    f.store.approve(pending).expect("approved");
+    assert!(f.store.load(ID).is_ok());
 }

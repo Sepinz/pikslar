@@ -285,6 +285,14 @@ fn the_view_menu_turns_rewind_on_and_forgets() {
     assert!(a.view_items()[on + 1].enabled);
     a.view_menu_action(on + 1, Window::detached());
     assert!(said(&a).starts_with("Forgot this file"));
+    // Every file's history goes only once the person says Yes (review finding M2).
+    strokes(&mut a, 1);
+    save_at(&mut a, &dir.join("m.piks"));
+    a.ask_forget_all = |_| false;
+    a.view_menu_action(on + 2, Window::detached());
+    assert_eq!(said(&a), "Kept all Rewind history");
+    assert!(a.view_items()[on + 1].enabled, "the history is still there");
+    a.ask_forget_all = |_| true;
     a.view_menu_action(on + 2, Window::detached());
     assert_eq!(said(&a), "Forgot all Rewind history");
     let _ = fs::remove_dir_all(&dir);
@@ -524,5 +532,38 @@ fn undo_into_kept_steps_never_waits_for_a_write_under_way() {
     assert!(same(b.editor.doc(), &states[1]), "{}", said(&b));
     let _ = go.send(());
     b.finish_rewind();
+    let _ = fs::remove_dir_all(&dir);
+}
+
+/// Review finding M1 (RC3): with undo memory full, undo stops at the kept steps with a word,
+/// Rewind is not taken as stuck, and redo reaches the newest work.
+#[test]
+fn undo_into_kept_steps_stops_with_a_word_once_memory_is_full() {
+    let dir = temp_dir("full");
+    let path = dir.join("full.piks");
+    let mut a = with_rewind(&dir);
+    let states = strokes(&mut a, 6);
+    save_at(&mut a, &path);
+    let mut b = reopened(&dir, &path);
+    b.editor.set_undo_budget(1);
+    b.undo();
+    assert!(
+        same(b.editor.doc(), &states[5]),
+        "one kept step is taken back"
+    );
+    b.undo();
+    assert!(same(b.editor.doc(), &states[5]), "then undo stops");
+    assert!(
+        said(&b).starts_with("Undo stops here for now"),
+        "{}",
+        said(&b)
+    );
+    assert!(!said(&b).contains("  "), "no runs of spaces: {}", said(&b));
+    assert!(!b.rewind.stuck, "Rewind is not stuck");
+    b.redo();
+    assert!(
+        same(b.editor.doc(), &states[6]),
+        "redo reaches the newest work"
+    );
     let _ = fs::remove_dir_all(&dir);
 }

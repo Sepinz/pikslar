@@ -68,6 +68,11 @@ impl App {
         let id = index as u32;
         let layer = &self.editor.doc().layers()[index];
         let (shown, group, name) = (layer.visible, layer.kind == LayerKind::Group, &layer.name);
+        // The eye says which layer it shows or hides, so a row read alone still makes sense.
+        let eye_hint = match shown {
+            true => format!("Hide {name}"),
+            false => format!("Show {name}"),
+        };
         let indent = i32::from(layer.depth) * INDENT * s;
         let eye = Rect::new(r.x, r.y, r.h, r.h);
         let lock = Rect::new(r.right() - r.h, r.y, r.h, r.h);
@@ -88,7 +93,7 @@ impl App {
             body,
             "Click to draw on this layer, double-click to rename  Up, Down",
         );
-        self.note_hint(eye, "Show or hide this layer");
+        self.note_hint_named(eye, "Show or hide this layer", eye_hint);
         self.note_hint(lock, "Lock this layer so it is not drawn on");
         let active = index == self.editor.layer;
         let fill = match (active, state.hover) {
@@ -204,7 +209,7 @@ impl App {
             (LayerKind::Group, _) => "GRP",
             (LayerKind::Tilemap(_), _) => "MAP",
             (_, ColorMode::Palette) => "PAL",
-            (_, ColorMode::Rgba) => "RGB",
+            (_, ColorMode::Rgba) => "RGBA",
         };
         let arrow = if layer.kind == LayerKind::Group {
             ARROW_ROOM * s
@@ -213,6 +218,7 @@ impl App {
         };
         let text_x = body.x + 8 * s + arrow;
         let text_y = body.y + (body.h - cap_height() * ts) / 2;
+        let tag_x = body.right() - text_width(tag, ts) - 6 * s;
         match self.layer_naming.as_ref().filter(|n| n.layer == index) {
             Some(naming) => {
                 let room = body.right() - text_x - 8 * s - text_width(tag, ts);
@@ -220,11 +226,13 @@ impl App {
                 draw_text_edit(sf, (text_x, text_y), room, &naming.edit, colors, ts);
             }
             None => {
+                // Twelve cells at most, and never into the mode badge beside it.
                 let label = crate::panel_right::layer_label(&layer.name, ts);
+                let room = tag_x - 4 * s - text_x;
+                let label = crate::panel_bottom::fit_to_width(&label, room, ts);
                 draw_text(sf, text_x, text_y, &label, theme::text(), ts);
             }
         }
-        let tag_x = body.right() - text_width(tag, ts) - 6 * s;
         draw_text(sf, tag_x, text_y, tag, theme::muted(), ts);
     }
 

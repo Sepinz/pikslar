@@ -102,12 +102,21 @@ fn interrupted_saves_leave_a_whole_file() {
         let left = temps_left(&dir);
         interrupted += u32::from(left > seen_left);
         seen_left = left;
-        let bytes = std::fs::read(&target).expect("still there");
+        // ReplaceFileW is two renames: a kill between them leaves the original at its backup
+        // name and nothing at the project's own, which the program offers back on opening
+        // (the kill matrix's "original at the backup name"). Seen once in the RC4 fault suite.
+        let backup = pikslar_format::publish::backup_path(&target);
+        let kept = if target.exists() { &target } else { &backup };
+        let bytes = std::fs::read(kept).unwrap_or_else(|e| panic!("kill {i}: no file: {e}"));
         let doc = piks::load(&bytes).expect("the file is whole");
         assert!(
             doc == first || doc == second,
             "kill {i}: some other contents"
         );
+        if !target.exists() {
+            // As the program does on opening: the kept original takes its place again.
+            std::fs::rename(&backup, &target).expect("put back");
+        }
     }
     assert!(interrupted > 0, "no kill landed during a write");
     std::fs::remove_dir_all(&dir).expect("clean up");

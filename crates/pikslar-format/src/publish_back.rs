@@ -51,6 +51,12 @@ impl NotKept {
     pub fn target_changed(&self) -> bool {
         matches!(self.left, Left::BackupAt(_) | Left::Unknown)
     }
+
+    /// True if the target no longer holds what it held before the save, whoever wrote it:
+    /// work that was saved there is not there any more.
+    pub fn original_gone(&self) -> bool {
+        self.target_changed() || matches!(self.left, Left::Overwritten(_))
+    }
 }
 
 impl std::fmt::Display for NotKept {
@@ -76,7 +82,7 @@ impl std::fmt::Display for NotKept {
             Left::Overwritten(kept) => {
                 write!(
                     f,
-                    "and the file was written by another program or another save after this one, 
+                    "and the file was written by another program or another save after this one, \
                      so nothing was put back over it. Check that file before relying on it"
                 )?;
                 match kept {
@@ -86,7 +92,7 @@ impl std::fmt::Display for NotKept {
             }
             Left::Unknown => write!(
                 f,
-                "and the file from before this save is not where it was kept, so nothing was put back 
+                "and the file from before this save is not where it was kept, so nothing was put back \
                  or removed. Save somewhere else, and do not rely on this file"
             ),
         }
@@ -148,7 +154,11 @@ fn written_since(target: &Path, mine: Option<Stamp>) -> bool {
 fn put_back(publish: &mut dyn Publish, target: &Path, backup: &Path) -> Left {
     let kept = Left::BackupAt(backup.to_path_buf());
     let Ok(original) = fs::read(backup) else {
-        return kept;
+        // Unreadable is still kept; gone since it was seen is not.
+        return match backup.exists() {
+            true => kept,
+            false => Left::Unknown,
+        };
     };
     if publish.restore(backup, target).is_err() {
         return match backup.exists() {

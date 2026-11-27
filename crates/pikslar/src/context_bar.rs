@@ -26,6 +26,15 @@ pub(crate) const ID_TILE_SWITCH: u32 = crate::panel_tiles::ID_TILES - 1;
 /// Controls are 20 units tall in the 28-unit bar: room for the focus ring, which reaches three
 /// units outside a control, without leaving the bar.
 pub(crate) const CONTROL: i32 = 20;
+
+/// The height in units of the bar's controls in the face in use: [`CONTROL`], and two more in
+/// *Large text*, whose doubled letters would otherwise reach the button's lower edge.
+pub(crate) fn control() -> i32 {
+    match pikslar_ui::font::face() {
+        pikslar_ui::font::Face::Text => CONTROL,
+        pikslar_ui::font::Face::Mono => CONTROL + 2,
+    }
+}
 /// Room at the bar's ends, and between controls.
 const MARGIN: i32 = 8;
 pub(crate) const GAP: i32 = 4;
@@ -115,7 +124,7 @@ impl App {
         }
         let s = self.ui.scale;
         sf.fill(Rect::new(bar.x, bar.bottom() - s, bar.w, s), theme::rule());
-        let y = bar.y + (bar.h - (CONTROL + 1) * s) / 2;
+        let y = bar.y + (bar.h - (control() + 1) * s) / 2;
         let mut limit = bar.right() - MARGIN * s;
         if self.active_tileset().is_some() {
             limit = self.draw_tile_switch(sf, y, limit) - GAP * s;
@@ -168,12 +177,12 @@ impl App {
         let mut x = left;
         for (&setting, &(wide, short)) in list.iter().zip(&widths).take(fit.shown) {
             let w = if fit.narrow { short } else { wide };
-            self.draw_setting(sf, setting, Rect::new(x, y, w, CONTROL * s), fit.narrow);
+            self.draw_setting(sf, setting, Rect::new(x, y, w, control() * s), fit.narrow);
             x += w + GAP * s;
         }
         self.bar.hidden_from = if fit.more { fit.shown } else { usize::MAX };
         if fit.more {
-            let rect = Rect::new(x, y, more_w, CONTROL * s);
+            let rect = Rect::new(x, y, more_w, control() * s);
             self.bar.more = rect;
             self.draw_more_button(sf, rect);
         }
@@ -222,7 +231,7 @@ impl App {
         use pikslar_ui::segmented::{segmented, Segment, Show};
         let (s, ts) = (self.ui.scale, self.ui.text_scale());
         let seg = text_width("Pixels", ts) + 12 * s;
-        let r = Rect::new(right - (2 * seg + s), y, 2 * seg + s, CONTROL * s);
+        let r = Rect::new(right - (2 * seg + s), y, 2 * seg + s, control() * s);
         let segments = [
             Segment {
                 name: "Tiles",

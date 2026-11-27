@@ -15,11 +15,11 @@ const MARK_W: i32 = 10;
 /// The sizes offered, in menu order: automatic, then 1x, 2x and 3x.
 const SIZES: [Option<i32>; 4] = [None, Some(1), Some(2), Some(3)];
 /// After the sizes. Large text is last, so the rows before it keep their ids.
-const KEYS_ITEM: &str = "Keyboard shortcuts...";
+pub(crate) const KEYS_ITEM: &str = "Keyboard shortcuts...";
 const MAKE_SLICE: &str = "Make slice from selection";
 /// Rewind, after the shortcuts: the label says what turning it on does.
-const REWIND_ON: &str = "Keep undo history after closing (Rewind)";
-const REWIND_OFF: &str = "Stop keeping undo history (Rewind is on)";
+pub(crate) const REWIND_ON: &str = "Keep undo history after closing (Rewind)";
+pub(crate) const REWIND_OFF: &str = "Stop keeping undo history (Rewind is on)";
 const FORGET: &str = "Forget this file's undo history";
 const FORGET_ALL: &str = "Forget all kept undo history";
 /// Diagnostics, after Large text: the label says what choosing it does, as Rewind's does.
@@ -132,7 +132,12 @@ impl App {
     pub(crate) fn view_marks(&self) -> [Option<MarkIcon>; 13] {
         let mut marks = [None; 13];
         for (mark, &size) in marks.iter_mut().zip(&SIZES) {
-            *mark = (size == self.interface_size).then_some(MarkIcon::RadioDot);
+            // Every size has a ring, so the four read as one choice and none as a command.
+            *mark = Some(if size == self.interface_size {
+                MarkIcon::RadioDot
+            } else {
+                MarkIcon::RadioEmpty
+            });
         }
         // An off switch shows an empty box, so it never looks like a command.
         let switch = |on: bool| {
@@ -173,7 +178,7 @@ impl App {
             None if n == SIZES.len() => self.open_keys_dialog(),
             None if n == SIZES.len() + 1 => self.toggle_rewind(),
             None if n == SIZES.len() + 2 => self.forget_rewind(),
-            None if n == SIZES.len() + 3 => self.forget_all_rewind(),
+            None if n == SIZES.len() + 3 => self.ask_forget_all_rewind(window),
             None if n == SIZES.len() + 4 => self.toggle_slices(),
             None if n == SIZES.len() + 5 => {
                 self.make_slice_from_selection();
@@ -252,20 +257,24 @@ mod tests {
     }
     #[test]
     fn the_toggles_and_the_chosen_size_carry_a_mark() {
-        use pikslar_ui::icons::MarkIcon::{CelEmpty, Check, RadioDot};
+        use pikslar_ui::icons::MarkIcon::{CelEmpty, Check, RadioDot, RadioEmpty};
         let mut a = App::launch(None, Some(32), None);
         a.resized(1920, 1003, 2);
         a.interface_size = None;
         let marks = a.view_marks();
         assert_eq!(marks[0], Some(RadioDot), "automatic is chosen");
-        assert_eq!(marks[1..4], [None, None, None]);
+        assert_eq!(
+            marks[1..4],
+            [Some(RadioEmpty); 3],
+            "the others are empty rings"
+        );
         assert_eq!(marks[8], Some(Check), "slices are shown");
         assert_eq!(marks[10], Some(CelEmpty), "large text is off: an empty box");
         a.interface_size = Some(2);
         a.show_slices = false;
         a.set_large_text(true);
         let marks = a.view_marks();
-        assert_eq!(marks[0], None);
+        assert_eq!(marks[0], Some(RadioEmpty));
         assert_eq!(marks[2], Some(RadioDot));
         assert_eq!(marks[8], Some(CelEmpty));
         assert_eq!(marks[10], Some(Check));

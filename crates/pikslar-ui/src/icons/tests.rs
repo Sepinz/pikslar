@@ -19,7 +19,7 @@ fn pixels(art: Art) -> Vec<Tone> {
 fn the_inventory_matches_the_plan() {
     assert_eq!(ToolIcon::ALL.len(), 14);
     assert_eq!(ActionIcon::ALL.len(), 63);
-    assert_eq!(MarkIcon::ALL.len(), 16);
+    assert_eq!(MarkIcon::ALL.len(), 17);
     for (i, icon) in ToolIcon::ALL.iter().enumerate() {
         assert_eq!(*icon as usize, i, "{icon:?}");
     }

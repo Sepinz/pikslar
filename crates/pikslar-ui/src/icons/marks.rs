@@ -21,6 +21,7 @@ pub enum MarkIcon {
     Grip,
     Close,
     Modified,
+    RadioEmpty,
 }
 
 impl MarkIcon {
@@ -43,6 +44,7 @@ impl MarkIcon {
             Grip,
             Close,
             Modified,
+            RadioEmpty,
         ]
     };
 
@@ -52,7 +54,7 @@ impl MarkIcon {
 }
 
 const SIZE: usize = 8;
-const MARKS: usize = 16;
+const MARKS: usize = 17;
 
 #[rustfmt::skip]
 static MARK_ART: [[u32; words(SIZE)]; MARKS] = sheet(SIZE, 8, &[
@@ -74,4 +76,13 @@ static MARK_ART: [[u32; words(SIZE)]; MARKS] = sheet(SIZE, 8, &[
     ".####... #..##..# .######. .#....#. ..####.. ........ ..####.. ...##...",
     "..##.... .#....#. ..####.. ..####.. ...##... ..#..#.. .##..##. ........",
     "........ ..####.. ........ ........ ........ ........ ........ ........",
+    // radio, not chosen
+    "..####..",
+    ".#....#.",
+    "#......#",
+    "#......#",
+    "#......#",
+    "#......#",
+    ".#....#.",
+    "..####..",
 ]);

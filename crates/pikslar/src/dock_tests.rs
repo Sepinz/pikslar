@@ -81,8 +81,8 @@ fn folded_slots_give_their_room_to_the_rest() {
 }
 
 #[test]
-fn a_short_dock_folds_the_palette_then_compacts_the_color_and_keeps_both() {
-    let mut palette_first = false;
+fn a_short_dock_compacts_the_color_before_it_folds_the_palette_and_keeps_both() {
+    let (mut compact_seen, mut folded_seen) = (false, false);
     for h in (560..=1100).step_by(10) {
         let a = at(1366, h);
         let slots = right(&a);
@@ -91,18 +91,22 @@ fn a_short_dock_folds_the_palette_then_compacts_the_color_and_keeps_both() {
             slots[0].1 && slots[2].1,
             "{h}: color and layers stay open: {slots:?}"
         );
+        // Compacting comes before hiding (R1, A11): the palette folds only once the color is
+        // compact, and the color compacts as soon as the lists would lose a row beside it.
         assert!(
-            !compact || !slots[1].1,
-            "{h}: color compacts only after the palette folds"
+            compact || slots[1].1,
+            "{h}: the palette folds only after the color compacts"
         );
-        palette_first |= !slots[1].1 && !compact;
+        compact_seen |= compact && slots[1].1;
+        folded_seen |= !slots[1].1;
         let used: i32 = slots.iter().map(|s| s.0).sum();
         assert_eq!(used, a.layout.right.h, "{h}");
     }
     assert!(
-        palette_first,
-        "some height folds the palette and keeps the color full"
+        compact_seen,
+        "some height compacts the color and keeps the palette open"
     );
+    assert!(folded_seen, "some height still has to fold the palette");
 }
 
 #[test]

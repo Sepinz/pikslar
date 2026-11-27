@@ -49,7 +49,7 @@ fn a_right_click_on_the_onion_button_opens_its_menu_and_changes_nothing() {
             "Hide later frames",
             "Stronger",
             "Fainter",
-            "Colours: red and blue",
+            "Colors: red and blue",
             "Depth: 1 frame",
         ]
     );
@@ -113,7 +113,7 @@ fn strength_colours_and_depth_go_through_their_choices() {
     open(&mut a);
     assert_eq!(
         labels(&a)[4..],
-        ["Colours: green and purple", "Depth: 2 frames"]
+        ["Colors: green and purple", "Depth: 2 frames"]
     );
 }
 

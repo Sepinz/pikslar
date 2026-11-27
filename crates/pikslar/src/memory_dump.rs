@@ -26,14 +26,16 @@ impl MemoryDump {
     }
 }
 
-/// One line of `key=value` pairs: the counts a soak records each minute.
+/// One line of `key=value` pairs: the counts a soak records each minute, then the state its
+/// checks need: the frame being edited (from 1, the one "This frame" exports), the active tool
+/// with spaces taken out, and whether a text session or a floating selection is open.
 pub(crate) fn memory_line(app: &App) -> String {
     let doc = app.editor.doc();
     let history = app.editor.history();
     let cels: usize = doc.layers().iter().map(|l| l.cels().len()).sum();
     format!(
         "frames={} layers={} cels={} document_bytes={} undo_steps={} redo_steps={} \
-         history_bytes={} pushes={}\n",
+         history_bytes={} pushes={} frame={} tool={} text_open={} floating={}\n",
         doc.frames.len(),
         doc.layers().len(),
         cels,
@@ -42,6 +44,10 @@ pub(crate) fn memory_line(app: &App) -> String {
         history.redo_depth(),
         history.memory_used(),
         history.pushes(),
+        app.editor.frame + 1,
+        app.tool_name().replace(' ', ""),
+        u8::from(app.text.is_some()),
+        u8::from(app.editor.is_floating()),
     )
 }
 
@@ -100,7 +106,23 @@ mod tests {
         a.pointer_up(x, y, pikslar_platform::Button::Left);
         let after = memory_line(&a);
         assert!(after.contains("undo_steps=1 "), "{after}");
-        assert!(after.ends_with('\n') && after.split_whitespace().count() == 8);
+        assert!(after.ends_with('\n') && after.split_whitespace().count() == 12);
+        assert!(
+            after.contains(" frame=1 tool=Pencil text_open=0 floating=0\n"),
+            "{after}"
+        );
+    }
+
+    #[test]
+    fn the_line_names_the_frame_being_edited_and_an_open_text_session() {
+        let mut a = app(1);
+        a.editor.frame = 0;
+        a.tool = crate::app::ToolChoice::Text;
+        let (x, y) = screen(&a, 2, 2);
+        a.pointer_down(x, y, pikslar_platform::Button::Left, PLAIN);
+        a.pointer_up(x, y, pikslar_platform::Button::Left);
+        let line = memory_line(&a);
+        assert!(line.contains(" frame=1 tool=Text text_open=1 "), "{line}");
     }
 
     #[test]

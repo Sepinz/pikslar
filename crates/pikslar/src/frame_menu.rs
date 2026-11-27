@@ -5,8 +5,7 @@ use crate::brush_thumbs::{library_page, ROOM};
 use pikslar_platform::{Key, Window};
 use pikslar_render::{Rect, Surface};
 use pikslar_ui::{
-    menu_key, menu_rect_with_room, menu_with_room, MenuItem, MenuKey, MenuNav, MenuResult,
-    MENU_LEVEL,
+    menu_grouped, menu_key, menu_rect_with_room, MenuItem, MenuKey, MenuNav, MenuResult, MENU_LEVEL,
 };
 use std::borrow::Cow;
 
@@ -96,6 +95,45 @@ pub(crate) fn as_items(entries: &Entries) -> Vec<MenuItem<'_>> {
             enabled: *enabled,
         })
         .collect()
+}
+
+/// The rows that start a group in the top menus, by the words of the row that starts each:
+/// a one-unit rule parts them (R1, A17). Words that are not in the menu start no group.
+fn group_words(kind: MenuKind) -> &'static [&'static [&'static str]] {
+    use crate::view_menu as v;
+    match kind {
+        MenuKind::File => &[&["Open a file..."], &["Save"], &["Export..."]],
+        MenuKind::Edit => &[
+            &["Cut"],
+            &["Select all"],
+            &["Flip across"],
+            &["Canvas size..."],
+        ],
+        MenuKind::View => &[
+            &[v::KEYS_ITEM],
+            &[v::REWIND_ON, v::REWIND_OFF],
+            &["Hide slices", "Show slices"],
+            &[crate::large_text::LABEL, crate::large_text::LABEL_ON],
+            &[v::DIAG_ON, v::DIAG_OFF, v::DIAG_RUN_OFF],
+        ],
+        _ => &[],
+    }
+}
+
+impl App {
+    /// Where the groups of the open menu start, as row numbers.
+    pub(crate) fn menu_groups(&self, kind: MenuKind, entries: &Entries) -> Vec<usize> {
+        if kind == MenuKind::Window {
+            // The workspaces, then the panels, then what changes the workspace.
+            let presets = self.preset_count();
+            return vec![presets, presets + self.panel_count()];
+        }
+        let words = |n: usize| pikslar_ui::menu::split_hint(&entries[n].0).0;
+        group_words(kind)
+            .iter()
+            .filter_map(|starts| (1..entries.len()).find(|&n| starts.contains(&words(n))))
+            .collect()
+    }
 }
 
 /// An open menu, and where it was opened.
@@ -288,7 +326,9 @@ impl App {
         let room = picture_room(open.kind);
         self.ui.menu_highlight = self.menu_cursor.filter(|(m, _)| *m == open).map(|(_, n)| n);
         self.ctx.menu_starts_at_top(&mut self.ui, open);
-        let chosen = menu_with_room(&mut self.ui, sf, ID_MENU, rect, &as_items(&entries), room);
+        let groups = self.menu_groups(open.kind, &entries);
+        let items = as_items(&entries);
+        let chosen = menu_grouped(&mut self.ui, sf, (ID_MENU, rect), &items, room, &groups);
         if open.kind == MenuKind::View {
             self.draw_view_marks(sf, rect);
         }

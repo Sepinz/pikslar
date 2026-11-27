@@ -6,6 +6,7 @@
 use crate::app::App;
 use crate::pending::{QUIT_WAIT, STILL_HISTORY, UI_WAIT};
 use pikslar_core::{DocumentId, OlderStep, RewindRefusal, StepCmd};
+use pikslar_platform::Window;
 use pikslar_rewind::{attach, Attach, Budgets, Chain, RewindError, Store, Written};
 use std::path::{Path, PathBuf};
 use std::thread::JoinHandle;
@@ -464,6 +465,9 @@ impl App {
             let Some(chain) = self.rewind.chain.as_mut().filter(|c| c.has_step(below)) else {
                 return;
             };
+            if self.editor.history().is_over_budget() {
+                return self.rewind_full();
+            }
             let step = match chain.read_older(&store, below, room) {
                 Ok(step) => step,
                 // A write under way may have rewritten the log: tried again at the next undo.
@@ -478,12 +482,23 @@ impl App {
                 Err(RewindRefusal::DoesNotFit) => {
                     return self.rewind_stuck("a kept step does not fit this file")
                 }
+                Err(RewindRefusal::Full) => return self.rewind_full(),
             }
             if !unchanged {
                 return;
             }
             self.run(StepCmd::Undo);
         }
+    }
+
+    /// Undo has reached the oldest step memory can hold; Rewind is not stuck, and after an
+    /// edit or on reopening it goes further.
+    fn rewind_full(&mut self) {
+        self.notify(
+            "Undo stops here for now: undo history in memory is full. Reopen the file to undo \
+             further"
+                .to_string(),
+        );
     }
 
     fn rewind_stuck(&mut self, why: &str) {
@@ -558,6 +573,15 @@ impl App {
                 self.notify("Forgot this file's Rewind history".to_string());
             }
             Err(e) => self.notify(format!("Rewind history was kept: {e}")),
+        }
+    }
+
+    /// Forgets every file's history, once the person said Yes: it cannot be undone.
+    pub(crate) fn ask_forget_all_rewind(&mut self, window: Window) {
+        if (self.ask_forget_all)(window) {
+            self.forget_all_rewind();
+        } else {
+            self.notify("Kept all Rewind history".to_string());
         }
     }
 

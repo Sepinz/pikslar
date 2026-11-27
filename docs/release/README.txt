@@ -123,6 +123,10 @@ Everything else is in one folder of your own:
   crash\         a short note for each unexpected close, the newest five.
   brushes.pkb    your custom brushes, if you make any.
   plugins\       plugins you have installed, if any.
+  plugin-approvals.txt
+                 which installed plugins you approved in the install review,
+                 one line each. A plugin folder copied in by hand does not
+                 load until you review and install it.
 
 The log and crash notes ("diagnostics") record times, the version, what
 happened (save, open, export, recovery, Rewind), how long it took, a Windows

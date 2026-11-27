@@ -329,6 +329,12 @@ impl Recovery {
             }
             return false;
         }
+        if std::mem::take(&mut self.clear_pending) {
+            // The copy waiting to go held saved work; this one holds changes since.
+            self.writer_done_within(Duration::ZERO);
+            self.remove_copy();
+            note(Event::new("recovery-clear", "done-before-write"));
+        }
         let Some(active) = &self.active else {
             return false;
         };

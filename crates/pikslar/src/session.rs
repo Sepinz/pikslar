@@ -307,6 +307,19 @@ impl App {
         Ok(())
     }
 
+    /// The file no longer holds the work: a save left other bytes in it. The work counts as
+    /// not saved, so closing asks, and a recovery copy of it is due at once.
+    pub(crate) fn work_no_longer_saved(&mut self) {
+        self.saved_revision = u64::MAX;
+        self.editor.forget_saved();
+        self.recovered = RECOVERY_NOT_WRITTEN;
+        self.recovery_due = Some(Instant::now());
+        // A session end already answered took the work as safe; it must look again.
+        self.session_kept = None;
+        // An open asked nothing, the work then being saved: it must not replace it now.
+        self.stop_opening();
+    }
+
     /// What a recovery copy made now would show.
     pub(crate) fn recovery_stamp(&self) -> (u64, u64, u64) {
         (
@@ -316,9 +329,10 @@ impl App {
         )
     }
 
-    /// True if ending now would lose something, including pixels not yet applied.
+    /// True if ending now would lose something, including pixels not yet applied. A save
+    /// under way counts: until it ends, the file is not known to hold the work.
     pub(crate) fn has_unsaved_work(&self) -> bool {
-        self.is_modified()
+        self.is_modified() || self.save_job.is_some()
     }
 
     /// Copies changed work to the recovery folder a few seconds after it changes.

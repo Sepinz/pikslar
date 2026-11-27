@@ -159,8 +159,15 @@ pub struct App {
     pub(crate) standing: crate::standing::Kept,
     /// The row of the open menu the keyboard is on, with the menu it belongs to.
     pub(crate) menu_cursor: Option<(crate::frame_menu::OpenMenu, usize)>,
-    /// What the pointer is resting on, said in the status line.
+    /// What the pointer is resting on, or else what the keyboard focus is on, said in the
+    /// status line.
     pub hint: Option<std::borrow::Cow<'static, str>>,
+    /// The hint is the focused control's, not the pointer's, so no tooltip shows it at the
+    /// pointer.
+    pub(crate) hint_from_focus: bool,
+    /// Where the focused control was drawn last pass, whose hint the status line says while the
+    /// pointer rests on nothing that has one.
+    pub(crate) focus_rect: Option<Rect>,
     pub changed: Vec<Rect>,
     pub xmap: Vec<i32>,
     pub(crate) size: (i32, i32),
@@ -201,10 +208,14 @@ pub struct App {
     /// Asks, when a save would replace a backup nobody decided about, whether it may; a test
     /// answers it instead.
     pub(crate) ask_replace_backup: fn(pikslar_platform::Window, &str) -> Option<bool>,
+    /// Asks before every file's kept undo history is forgotten; a test answers it instead.
+    pub(crate) ask_forget_all: fn(pikslar_platform::Window) -> bool,
     /// Backups a save may replace: decided about, or left by this session's own save.
     pub(crate) backups_known: Vec<std::path::PathBuf>,
     /// How long the saving thread waits before it starts, for tests of a slow disk.
     pub(crate) save_delay: Option<std::time::Duration>,
+    /// How long a save waits for the byte compare, and extra read time for slow-disk tests.
+    pub(crate) compare: (std::time::Duration, Option<std::time::Duration>),
     /// What each script run is held to, from the settings.
     pub(crate) script_limits: pikslar_bind::ScriptLimits,
     /// The Scripts panel: what is loaded, what it printed, how its last run ended.
@@ -353,8 +364,10 @@ impl App {
             ask_changed: pikslar_platform::ask_changed_on_disk,
             ask_backup: pikslar_platform::ask_open_backup,
             ask_replace_backup: pikslar_platform::ask_replace_backup,
+            ask_forget_all: pikslar_platform::ask_forget_all_history,
             backups_known: Vec::new(),
             save_delay: None,
+            compare: (crate::outside::COMPARE_WAIT, None),
             script_limits: pikslar_bind::ScriptLimits::DEFAULT,
             scripts: Default::default(),
             plugins: Default::default(),
@@ -393,6 +406,8 @@ impl App {
             standing: crate::standing::register(),
             menu_cursor: None,
             hint: None,
+            hint_from_focus: false,
+            focus_rect: None,
             changed: Vec::with_capacity(64),
             xmap: Vec::new(),
             size: (0, 0),
@@ -735,10 +750,12 @@ impl App {
         // The docks show what the active layer wants (Tiles on a tilemap layer).
         self.sync_matrix_layout();
         let focused_was = self.focus_before_draw();
+        self.focus_rect = focused_was;
         self.ui.begin();
         self.name_canvas();
         self.in_draw = true;
         self.hint = None;
+        self.hint_from_focus = false;
         self.cover_menu();
         for rect in self.layout.chrome() {
             surface.fill(rect, theme::panel());

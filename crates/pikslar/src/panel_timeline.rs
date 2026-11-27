@@ -148,6 +148,15 @@ impl App {
             theme::muted()
         };
         let label = (frame + 1).to_string();
+        // Large text's doubled digits fit two to a cell; a longer number steps down a whole
+        // whole multiple of the interface scale at a time, so it stays pixel exact and never
+        // meets its neighbour's.
+        let room = r.w - 2 * s;
+        let ts = (1..=ts / s)
+            .rev()
+            .map(|k| k * s)
+            .find(|&t| text_width(&label, t) <= room)
+            .unwrap_or(s);
         let x = r.x + (r.w - text_width(&label, ts)) / 2;
         draw_text(sf, x, number_y(r, s, ts), &label, ink, ts);
         let layer = &self.editor.doc().layers()[self.editor.layer];

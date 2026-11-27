@@ -21,6 +21,12 @@ use std::fs::{self, File};
 use std::io;
 use std::os::windows::fs::OpenOptionsExt;
 use std::path::Path;
+use std::sync::mpsc;
+use std::time::{Duration, Instant};
+
+/// How long the window, answering meanwhile, waits for the bytes to be compared before a
+/// save. A file not read by then counts as changed, so the person is asked.
+pub(crate) const COMPARE_WAIT: Duration = Duration::from_secs(5);
 
 const FILE_SHARE_READ: u32 = 1;
 const FILE_SHARE_DELETE: u32 = 4;
@@ -68,6 +74,51 @@ pub(crate) fn still_same(path: &Path, seen: &Seen) -> Option<Seen> {
         stamp: now,
         print: Some(print),
     })
+}
+
+/// As [`still_same`], reading the bytes on another thread while the window answers, for at
+/// most `within`: slow storage never freezes the window. A stamp that matches settles it
+/// without reading. A read not done in time, or one that cannot start, counts as a change.
+fn still_same_answering(
+    window: Window,
+    path: &Path,
+    seen: Seen,
+    (within, delay): (Duration, Option<Duration>),
+) -> Option<Seen> {
+    match file_stamp(path) {
+        None => return Some(seen),
+        Some(now) if now == seen.stamp => return Some(seen),
+        Some(_) => {}
+    }
+    seen.print?;
+    let (put, take) = mpsc::channel();
+    let target = path.to_path_buf();
+    let started = std::thread::Builder::new()
+        .name("compare".into())
+        .spawn(move || {
+            if let Some(delay) = delay {
+                std::thread::sleep(delay);
+            }
+            // Nobody listens once the window stopped waiting; the answer then goes unused.
+            let _ = put.send(still_same(&target, &seen));
+        });
+    if started.is_err() {
+        return None;
+    }
+    let end = Instant::now() + within;
+    let mut answer = None;
+    pikslar_platform::wait_answering(
+        window,
+        || {
+            answer = take.try_recv().ok();
+            answer.is_none() && Instant::now() < end
+        },
+        |_| {},
+    );
+    if answer.is_none() {
+        note(Event::new("save", "compare-slow").file(path));
+    }
+    answer.flatten()
 }
 
 /// Opens `path` so that no other program can open it to write until the handle is dropped,
@@ -122,7 +173,7 @@ impl App {
         let Some(seen) = self.seen.filter(|_| own) else {
             return Outside::Go(None);
         };
-        if let Some(same) = still_same(path, &seen) {
+        if let Some(same) = still_same_answering(window, path, seen, self.compare) {
             return Outside::Go(Some(same));
         }
         note(Event::new("save", "changed-outside").file(path));

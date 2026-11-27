@@ -50,6 +50,8 @@ pub enum RewindRefusal {
     NotAtBottom,
     /// The step does not fit this document: another layer kind, or out of range.
     DoesNotFit,
+    /// History in memory is already over its budget: steps taken back would go past it.
+    Full,
 }
 
 /// How far past the canvas, in canvases, a stored pixel step may reach.
@@ -154,6 +156,11 @@ impl Editor {
         }
         if marks.depth != marks.below || marks.below == 0 {
             return Err(RewindRefusal::NotAtBottom);
+        }
+        // Redo is never trimmed (it is the only way back to the newest work), so the steps
+        // taken back stop once memory is over budget: at most one step past it.
+        if self.history.is_over_budget() {
+            return Err(RewindRefusal::Full);
         }
         let edit = match step {
             OlderStep::Unchanged => Edit::Selection(self.selection.clone()),

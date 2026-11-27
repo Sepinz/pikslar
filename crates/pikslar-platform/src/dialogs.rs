@@ -244,12 +244,11 @@ pub fn ask_save_changes(window: Window) -> SaveChoice {
 /// closes or replaces the work being saved.
 pub fn ask_replace_backup(window: Window, name: &str) -> Option<bool> {
     let message = format!(
-        "A backup from an interrupted save is in the way: {name}.
-
-\n         It may hold earlier work the project itself lost.
-
-\n         Yes: replace it with this save.
-\n         No: keep it, and do not save now. Your work here stays open: use Save as to keep it \n         under another name."
+        "A backup from an interrupted save is in the way: {name}.\n\n\
+         It may hold earlier work the project itself lost.\n\n\
+         Yes: replace it with this save.\n\
+         No: keep it, and do not save now. Your work here stays open: use Save as to keep it \
+         under another name."
     );
     match message_box(window, &message, MB_YESNO | MB_ICONWARNING) {
         Some(IDYES) => Some(true),
@@ -273,4 +272,12 @@ pub fn ask_open_backup(window: Window, name: &str) -> Option<bool> {
         Some(IDNO) => Some(false),
         _ => None,
     }
+}
+
+/// Before every file's kept undo history is deleted. Only Yes deletes it; nobody answering
+/// keeps it.
+pub fn ask_forget_all_history(window: Window) -> bool {
+    let message = "Forget the kept undo history of every file?\n\n\
+                   The files themselves stay as they are. This cannot be undone.";
+    message_box(window, message, MB_YESNO | MB_ICONWARNING) == Some(IDYES)
 }

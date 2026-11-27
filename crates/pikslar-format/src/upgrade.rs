@@ -2,7 +2,8 @@
 //!
 //! The rules are in `docs/format-v3.md`. The original's bytes are copied to a backup that is
 //! never overwritten, and the project is replaced only if it still holds exactly those bytes.
-//! A failure at any step leaves the project as it was.
+//! A failure at any step leaves the project as it was, except a replacement that did not read
+//! back and could not be put back: its error says so, and the original is still the backup.
 
 use crate::atomic::{matches_on_disk, SaveStep, TEMP_SUFFIX};
 use crate::publish::{write_atomic_with, Placed, Publish, Rename};
@@ -46,7 +47,20 @@ impl fmt::Display for UpgradeError {
             UpgradeError::Changed => {
                 f.write_str("The project changed on disk while saving, so it was left as it was")
             }
+            // A replacement that did not read back says itself what is in the file now.
+            UpgradeError::Failed(e) if self.not_kept().is_some() => e.fmt(f),
             UpgradeError::Failed(e) => write!(f, "{e}. The project was left as it was"),
+        }
+    }
+}
+
+impl UpgradeError {
+    /// The [`NotKept`](crate::publish_back::NotKept) inside, if the replaced project did not
+    /// read back.
+    pub fn not_kept(&self) -> Option<&crate::publish_back::NotKept> {
+        match self {
+            UpgradeError::Failed(e) => crate::publish_back::not_kept(e),
+            _ => None,
         }
     }
 }

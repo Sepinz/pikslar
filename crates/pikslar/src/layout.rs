@@ -138,6 +138,17 @@ pub(crate) fn today() -> Metrics {
         least_across: Panel::least_across,
         folded,
         shown: folded_shown,
+        row: list_row,
+    }
+}
+
+/// The pitch of a panel's list rows in units: a layer, a row of swatches (see
+/// [`Metrics::row`]).
+fn list_row(p: Panel) -> i32 {
+    match p {
+        Panel::Layers => LAYER_ROW,
+        Panel::Palette => PALETTE_ROW,
+        _ => 0,
     }
 }
 

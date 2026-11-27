@@ -15,6 +15,8 @@ mod brush_thumbs;
 mod brush_ui;
 #[cfg(test)]
 mod brush_ui_tests;
+#[cfg(test)]
+mod c1_failure_tests;
 mod canvas;
 mod canvas_dialog;
 mod cel_ui;
@@ -147,6 +149,8 @@ mod plugin_review;
 mod plugin_ui;
 #[cfg(test)]
 mod polish_tests;
+#[cfg(test)]
+mod r1_tests;
 mod rate_menu;
 mod recovery;
 #[cfg(test)]
@@ -194,6 +198,8 @@ mod test_app;
 mod text_review_tests;
 #[cfg(test)]
 mod text_room_tests;
+#[cfg(test)]
+mod text_rotate_tests;
 mod text_ui;
 #[cfg(test)]
 mod text_ui_tests;
@@ -220,6 +226,8 @@ mod true_preview_tests;
 mod tween_menu;
 #[cfg(test)]
 mod tween_menu_tests;
+#[cfg(test)]
+mod ui_timing_tests;
 mod view_menu;
 mod window_actions;
 mod window_menu;

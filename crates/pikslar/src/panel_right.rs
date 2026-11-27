@@ -130,13 +130,19 @@ impl App {
         let id = ID_SECTION + section as u32;
         // Folded by the panel for want of room, not by hand: a click could not show it.
         let for_room = folded && !self.folded_by_hand(section);
-        let hint = match (for_room, folded) {
-            (true, _) => "Folded for room. A taller window shows it",
-            (_, true) => "Show this section",
-            _ if section == Section::Palette => {
-                "Fold this section. Right click for the palette menu"
+        // The hint names the section, which matters where its title has no room to show.
+        let hint = match (for_room, folded, section) {
+            (true, _, _) => "Folded for room. A taller window shows it",
+            (_, true, Section::Color) => "Open the Color section",
+            (_, true, Section::Palette) => "Open the Palette section",
+            (_, true, Section::Layers) => "Open the Layers section",
+            (_, true, Section::Lint) => "Open the Pixel Lint section",
+            (_, _, Section::Color) => "Fold the Color section",
+            (_, _, Section::Palette) => {
+                "Fold the Palette section. Right click for the palette menu"
             }
-            _ => "Fold this section",
+            (_, _, Section::Layers) => "Fold the Layers section",
+            (_, _, Section::Lint) => "Fold the Pixel Lint section",
         };
         self.note_hint(r, hint);
         if fold_header(&mut self.ui, sf, id, r, title, !folded) && !for_room {
@@ -173,13 +179,17 @@ impl App {
         self.section_header(sf, Section::Color, header, folded);
         let swatch = Rect::new(header.right() + s, area.y, area.w - header.w - s, area.h);
         if folded {
-            self.draw_color_value(sf, swatch, 22, true);
+            self.draw_color_value(sf, swatch, 22, true, None);
             return;
         }
         let compact = area.h < crate::panel_fit::FULL_COLOR * s;
         let (size, gap) = if compact { (22, 4) } else { (44, 10) };
-        let preview = self.draw_color_value(sf, swatch, size, compact);
-        self.draw_channels(sf, area, preview.bottom() + gap * s, compact);
+        // A compact block keeps its two rows of sliders; what height is left may take the
+        // value's label on a line of its own when it does not fit beside the value.
+        let channels = crate::panel_fit::COLOR_CHANNELS * s;
+        let below = (area.bottom() - channels - gap * s).max(area.y);
+        let bottom = self.draw_color_value(sf, swatch, size, compact, Some(below));
+        self.draw_channels(sf, area, bottom + gap * s, compact);
     }
 
     /// The four channel sliders, a row each at a 24 unit pitch, which their hit areas need. A
@@ -206,35 +216,68 @@ impl App {
     }
 
     /// The current color's swatch, `size` units square, with its value and what it is for.
-    /// Returns the swatch.
-    fn draw_color_value(&self, sf: &mut Surface<'_>, area: Rect, size: i32, compact: bool) -> Rect {
+    /// Compact, the label goes beside the value, or on a line under it when it does not fit
+    /// there and that line ends by `second_line_by`. Where neither has room, as in *Large text*
+    /// at 2x, the label takes the value's place: what the swatch is for is the one thing the
+    /// swatch cannot show, and its value stays in the swatch's hint. Returns the bottom of what
+    /// was drawn.
+    fn draw_color_value(
+        &mut self,
+        sf: &mut Surface<'_>,
+        area: Rect,
+        size: i32,
+        compact: bool,
+        second_line_by: Option<i32>,
+    ) -> i32 {
         let s = self.ui.scale;
         let ts = self.ui.text_scale();
         let preview = Rect::new(area.x, area.y, size * s, size * s);
         sf.fill(preview, to_screen(self.editor.color));
         pikslar_ui::chrome::edge_outline(sf, preview, s);
-        let label = hex(self.editor.color);
-        let text_x = preview.right() + if compact { 6 * s } else { 10 * s };
-        draw_text(sf, text_x, area.y + 4 * s, &label, theme::text(), ts);
+        let value = hex(self.editor.color);
         let hint = if self.live_palette && self.selected_swatch.is_some() {
             "Recoloring"
         } else {
             "Foreground"
         };
+        self.note_hint(preview, format!("{hint} color {value}"));
         let color = if hint == "Recoloring" {
             theme::accent()
         } else {
             theme::muted()
         };
-        let (hint_x, hint_y) = if compact {
-            (text_x + text_width(&label, ts) + 6 * s, area.y + 4 * s)
+        let text_x = preview.right() + if compact { 6 * s } else { 10 * s };
+        let line = cap_height() * ts;
+        let top = area.y + 4 * s;
+        let beside = (text_x + text_width(&value, ts) + 6 * s, top);
+        let under = (text_x, top + line + 4 * s);
+        let fits = |(x, _): (i32, i32)| x + text_width(hint, ts) <= area.right();
+        let place = if !compact {
+            Some((text_x, area.y + 26 * s))
+        } else if fits(beside) {
+            Some(beside)
         } else {
-            (text_x, area.y + 26 * s)
+            second_line_by
+                .filter(|&by| under.1 + line <= by)
+                .map(|_| under)
+                .filter(|&at| fits(at))
         };
-        if hint_x + text_width(hint, ts) <= area.right() {
-            draw_text(sf, hint_x, hint_y, hint, color, ts);
+        let instead = place.is_none() && compact && fits((text_x, top));
+        if !instead {
+            draw_text(sf, text_x, top, &value, theme::text(), ts);
         }
-        preview
+        let place = place.or(instead.then_some((text_x, top)));
+        let mut bottom = preview.bottom();
+        if let Some((x, y)) = place {
+            draw_text(sf, x, y, hint, color, ts);
+            // Named for tests and scripts, which check that the label is shown.
+            if self.ui.naming() {
+                let r = Rect::new(x, y, text_width(hint, ts), line);
+                self.ui.name_rect(r, &format!("Color label {hint}"));
+            }
+            bottom = bottom.max(y + line);
+        }
+        bottom
     }
 
     fn channel_slider(&mut self, sf: &mut Surface<'_>, channel: usize, row: Rect) {
@@ -389,11 +432,18 @@ impl App {
     }
 
     fn draw_mode_button(&mut self, sf: &mut Surface<'_>, r: Rect, index: usize, mode: ColorMode) {
-        let (label, next) = match mode {
-            ColorMode::Palette => ("To RGBA", ColorMode::Rgba),
-            ColorMode::Rgba => ("To Pal.", ColorMode::Palette),
+        // The mode it changes to, by its one name; the word alone where "To" does not fit.
+        let (label, short, next) = match mode {
+            ColorMode::Palette => ("To RGBA", "RGBA", ColorMode::Rgba),
+            ColorMode::Rgba => ("To Palette", "Palette", ColorMode::Palette),
         };
-        self.note_hint(r, "Change this layer between palette and full color");
+        let room = r.w - 4 * self.ui.scale;
+        let label = if text_width(label, self.ui.text_scale()) <= room {
+            label
+        } else {
+            short
+        };
+        self.note_hint(r, "Change this layer between Palette and RGBA");
         if button(&mut self.ui, sf, ID_LAYER_TOOLS + 12, r, label, false) {
             self.defer(move |a| {
                 a.set_layer_mode(index, next);

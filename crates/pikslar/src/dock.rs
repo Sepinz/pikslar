@@ -13,6 +13,7 @@ use pikslar_ui::icons::ActionIcon;
 use pikslar_ui::rail::{rail, RailIcon, RailItem};
 use pikslar_ui::tabs::{tab_strip, Strip, TabEvent, BUTTON_W as FOLD_W, TAB_IDS};
 use pikslar_ui::theme;
+use std::borrow::Cow;
 
 /// The docks' controls: a tab strip per slot from here, [`TAB_IDS`] each.
 pub(crate) const ID_DOCK: u32 = 760_000;
@@ -194,6 +195,22 @@ impl App {
                 icons: &icons[..count],
             };
             let out = tab_strip(&mut self.ui, sf, id, strip_r, shown);
+            // The strip's two icon buttons say what they do; they keep the names the strip
+            // gave them. A slot folded for room says so on its fold button instead.
+            let fold = if r.open {
+                "Fold this panel"
+            } else {
+                "Unfold this panel"
+            };
+            for (offset, hint) in [
+                (pikslar_ui::tabs::MENU, "Panel menu"),
+                (pikslar_ui::tabs::FOLD, fold),
+            ] {
+                let at = self.ui.widgets().iter().find(|(_, w)| *w == id + offset);
+                if let Some(&(rect, _)) = at {
+                    self.say_hint_over(rect, Cow::Borrowed(hint));
+                }
+            }
             self.hint_room_fold((side, i), r, strip_r);
             // A tab drawn as its icon alone says its name when the pointer rests on it, or the
             // keyboard focus.
@@ -201,7 +218,7 @@ impl App {
                 let tab_id = id + 1 + n as u32;
                 let rect = self.ui.widgets().iter().find(|(_, w)| *w == tab_id);
                 if let Some(&(rect, _)) = rect {
-                    self.note_tab_hint(rect, tab_id, words[n]);
+                    self.note_hint(rect, words[n]);
                 }
             }
             if let Some(kept) = self.drawn_strips.slots.get_mut(side.index() * 3 + i) {

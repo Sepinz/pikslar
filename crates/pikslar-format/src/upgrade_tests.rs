@@ -220,3 +220,41 @@ fn a_stale_temporary_copy_never_writes_through_to_another_file() {
     assert_eq!(fs::read(&path).expect("project"), NEW);
     fs::remove_dir_all(&dir).expect("clean up");
 }
+
+/// A disk that garbles the replaced project and refuses to put the original back.
+struct Lies;
+
+impl Publish for Lies {
+    fn replace(&mut self, target: &Path, temp: &Path, backup: &Path) -> io::Result<()> {
+        fs::rename(target, backup)?;
+        fs::rename(temp, target)?;
+        fs::write(target, b"garbled")
+    }
+    fn place_new(&mut self, temp: &Path, target: &Path) -> io::Result<()> {
+        fs::rename(temp, target)
+    }
+    fn restore(&mut self, _backup: &Path, _target: &Path) -> io::Result<()> {
+        Err(io::Error::other("injected: cannot put back"))
+    }
+}
+
+#[test]
+fn an_upgrade_that_did_not_read_back_and_was_not_put_back_says_so_and_keeps_the_original() {
+    let (dir, path) = folder();
+    let e = upgrade_with(&path, OLDER, NEW, &mut |_| Ok(()), &mut Lies).expect_err("caught");
+    let kept = e.not_kept().expect("the read back failed");
+    assert!(kept.target_changed(), "{e}");
+    assert!(kept.original_gone());
+    let said = e.to_string();
+    assert!(
+        !said.contains("left as it was"),
+        "never says the project was kept: {said}"
+    );
+    assert!(!said.contains("  "), "no runs of spaces: {said}");
+    assert_eq!(
+        fs::read(backup_path(&path, OLDER)).expect("the version's backup"),
+        older_bytes(b"old art"),
+        "the original is still kept"
+    );
+    fs::remove_dir_all(&dir).expect("clean up");
+}

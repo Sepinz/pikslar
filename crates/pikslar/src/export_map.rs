@@ -10,7 +10,7 @@ use std::path::PathBuf;
 
 /// The TMJ button, after the kinds.
 pub(crate) const MAP_LABEL: &str = "TMJ";
-pub(crate) const MAP_HINT: &str = "A Tiled map of the frame shown, with an atlas a tileset  6";
+pub(crate) const MAP_HINT: &str = "A Tiled map of the frame shown, with an atlas per tileset  6";
 pub(crate) const MAP_ENDING: &str = "tmj";
 pub(crate) const MAP_FILTER: &str = "Tiled map\0*.tmj\0";
 

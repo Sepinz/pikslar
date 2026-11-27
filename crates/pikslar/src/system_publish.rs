@@ -40,6 +40,47 @@ impl Publish for SystemPublish {
     }
 }
 
+/// What a save to `path` publishes through: the system, or in a test the disk set for it.
+pub(crate) fn publisher(path: &Path, expect: Option<Seen>) -> Box<dyn Publish> {
+    #[cfg(test)]
+    if let Some(disk) = test_disk(path) {
+        return disk();
+    }
+    #[cfg(not(test))]
+    let _ = path;
+    Box::new(SystemPublish { expect })
+}
+
+/// A misbehaving disk a test puts under saves to one path, through the real save thread.
+#[cfg(test)]
+pub(crate) type TestDisk = fn() -> Box<dyn Publish>;
+
+#[cfg(test)]
+static TEST_DISKS: std::sync::Mutex<Vec<(std::path::PathBuf, TestDisk)>> =
+    std::sync::Mutex::new(Vec::new());
+
+/// Saves to `path` go through `disk` until [`clear_test_disk`].
+#[cfg(test)]
+pub(crate) fn set_test_disk(path: &Path, disk: TestDisk) {
+    let mut disks = TEST_DISKS.lock().expect("test disks");
+    disks.retain(|(p, _)| p != path);
+    disks.push((path.to_path_buf(), disk));
+}
+
+#[cfg(test)]
+pub(crate) fn clear_test_disk(path: &Path) {
+    TEST_DISKS
+        .lock()
+        .expect("test disks")
+        .retain(|(p, _)| p != path);
+}
+
+#[cfg(test)]
+fn test_disk(path: &Path) -> Option<TestDisk> {
+    let disks = TEST_DISKS.lock().expect("test disks");
+    disks.iter().find(|(p, _)| p == path).map(|(_, d)| *d)
+}
+
 #[cfg(test)]
 #[path = "system_publish_tests.rs"]
 mod tests;

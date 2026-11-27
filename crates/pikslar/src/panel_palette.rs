@@ -105,7 +105,9 @@ impl App {
         let (area, top) = (body, body.y);
         let per_row = (area.w / (PALETTE_ROW * s)).max(1);
         let tools_left = area.right() - 22 * s * 2 - 62 * s;
-        let header = Rect::new(area.x, top, tools_left - area.x - 4 * s, 22 * s);
+        // One unit short of Live: with the title's own three units that parts them by four,
+        // and in Large text it is what lets "Palette" show beside the tools.
+        let header = Rect::new(area.x, top, tools_left - area.x - s, 22 * s);
         self.palette_ui.header = header;
         self.section_header(sf, Section::Palette, header, folded);
         self.draw_group_name(sf, header);

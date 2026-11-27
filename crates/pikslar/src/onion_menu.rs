@@ -9,9 +9,9 @@ use pikslar_ui::MenuItem;
 
 fn colors_label(colors: OnionColors) -> &'static str {
     match colors {
-        OnionColors::RedBlue => "Colours: red and blue",
-        OnionColors::GreenPurple => "Colours: green and purple",
-        OnionColors::Own => "Colours: their own",
+        OnionColors::RedBlue => "Colors: red and blue",
+        OnionColors::GreenPurple => "Colors: green and purple",
+        OnionColors::Own => "Colors: their own",
     }
 }
 

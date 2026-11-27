@@ -26,8 +26,8 @@ pub use fold::fold_header;
 pub use font::{cap_height, cells, draw_text, em, fit_h, text_width, ADVANCE, GLYPH_H, GLYPH_W};
 pub use icons::{draw_icon, Icon, ICON_SIZE};
 pub use menu::{
-    menu, menu_key, menu_rect, menu_rect_with_room, menu_row, menu_with_room, MenuItem, MenuKey,
-    MenuNav, MenuResult, MENU_LEVEL, MENU_PAD,
+    menu, menu_grouped, menu_key, menu_rect, menu_rect_with_room, menu_row, menu_with_room,
+    MenuItem, MenuKey, MenuNav, MenuResult, MENU_LEVEL, MENU_PAD,
 };
 pub use scroll::scroll_bar;
 pub use text_edit::{edit_for, multi_line, one_line, Edit, TextEdit};

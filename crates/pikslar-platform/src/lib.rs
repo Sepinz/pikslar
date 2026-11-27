@@ -31,9 +31,10 @@ pub use clipboard::{clipboard_stamp, copy_image, paste_image, ClipboardImage};
 pub use clipboard_text::{copy_text, paste_text, TextPaste};
 pub use clock::local_clock;
 pub use dialogs::{
-    ask_changed_on_disk, ask_open_backup, ask_replace_backup, ask_replace_file, ask_restore_work,
-    ask_save_changes, ask_upgrade, open_file_dialog, open_file_dialog_titled, save_file_dialog,
-    save_file_dialog_titled, show_error, ChangedChoice, SaveChoice, UpgradeChoice,
+    ask_changed_on_disk, ask_forget_all_history, ask_open_backup, ask_replace_backup,
+    ask_replace_file, ask_restore_work, ask_save_changes, ask_upgrade, open_file_dialog,
+    open_file_dialog_titled, save_file_dialog, save_file_dialog_titled, show_error, ChangedChoice,
+    SaveChoice, UpgradeChoice,
 };
 pub use glyphs::rasterize_glyph;
 pub use look::{high_contrast, text_percent, SystemColors};

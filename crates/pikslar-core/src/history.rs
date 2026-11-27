@@ -384,6 +384,11 @@ impl History {
         self.used + self.lists()
     }
 
+    /// True if the steps kept take more than the budget: no step is taken back from disk.
+    pub fn is_over_budget(&self) -> bool {
+        self.used > self.budget
+    }
+
     /// The room history's lists keep for steps they do not hold yet, or no longer hold, and
     /// the counts of drawings. Each step's own room is in what the step is charged.
     fn lists(&self) -> usize {

@@ -89,12 +89,14 @@ fn the_rewind_bar_and_a_status_message_never_overlap() {
     font::set_face(Face::Text);
 }
 
+/// The bar stays put while what the status says fits beside it (R1 changed the rule: a message
+/// that would be cut takes room from the bar, see r1_tests).
 #[test]
-fn the_rewind_bar_keeps_its_size_whatever_the_status_says() {
+fn the_rewind_bar_keeps_its_size_while_the_status_fits() {
     let size = (1366, 705, 1);
     let mut a = named_app(size, 1);
     let quiet = widget(&a, ID_REWIND).expect("drawn");
-    a.notify("Saved C:/a/very/long/path/to/some/sprite/that/goes/on/and/on.piks".into());
+    a.notify("Saved sprite.piks".into());
     redraw(&mut a, (size.0, size.1));
     assert_eq!(widget(&a, ID_REWIND), Some(quiet));
 }

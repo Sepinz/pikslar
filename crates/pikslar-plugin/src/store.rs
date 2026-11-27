@@ -38,6 +38,9 @@ pub enum Disabled {
     Changed,
     /// The record and the files disagree about the id, version or capabilities.
     Mismatch(String),
+    /// The record is not one this Pikslar wrote after its install review: the folder was put
+    /// there by hand or by another program, so its permissions were never shown.
+    NotApproved,
 }
 
 impl fmt::Display for Disabled {
@@ -52,6 +55,10 @@ impl fmt::Display for Disabled {
                 "its files changed after it was installed; review and install it again to use it",
             ),
             Disabled::Mismatch(why) => write!(f, "its install record does not match it: {why}"),
+            Disabled::NotApproved => f.write_str(
+                "it was not installed through Pikslar's install review; review and install it \
+                 to use it",
+            ),
         }
     }
 }
@@ -207,7 +214,18 @@ impl PluginStore {
                 .map(|f| f.name.clone())
                 .collect(),
         );
-        install::write(root, &pending.package, &record)
+        // Noted first, beside the approval of any copy installed now: an install cut short
+        // leaves the old copy, or an approval no record matches yet, and both were reviewed.
+        let new = record.to_bytes();
+        let before = crate::approvals::add(root, &manifest.id, &new)?;
+        match install::write(root, &pending.package, &record) {
+            Ok(()) => crate::approvals::set(root, &manifest.id, Some(&new)),
+            Err(e) => {
+                // The copy from before is back in place: so is its approval.
+                let _ = crate::approvals::restore(root, &manifest.id, &before);
+                Err(e)
+            }
+        }
     }
 
     /// Removes an installed plugin and everything Pikslar kept for it.
@@ -219,7 +237,11 @@ impl PluginStore {
             return not_installed();
         }
         if root.join(id).is_dir() {
-            return install::remove(root, id);
+            install::remove(root, id)?;
+            // The plugin is gone either way. An approval left behind matches only these same
+            // reviewed files, and the next install of this id replaces it.
+            let _ = crate::approvals::set(root, id, None);
+            return Ok(());
         }
         // No plugin, but an install or uninstall that did not finish may have left its side
         // folders, which are never listed: they go too.
@@ -247,8 +269,11 @@ impl PluginStore {
         }
         let (files, record) = read_flat_folder(&dir, Some(RECORD_FILE))
             .map_err(|e| Disabled::Unreadable(e.to_string()))?;
-        let record =
-            Record::parse(&record.ok_or(Disabled::NoRecord)?).map_err(Disabled::BadRecord)?;
+        let record = record.ok_or(Disabled::NoRecord)?;
+        if !crate::approvals::is_approved(root, id, &record) {
+            return Err(Disabled::NotApproved);
+        }
+        let record = Record::parse(&record).map_err(Disabled::BadRecord)?;
         let mut sorted = files;
         crate::package::sort_by_name(&mut sorted);
         if hex(&content_hash(&sorted)) != record.hash {

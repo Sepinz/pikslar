@@ -58,17 +58,34 @@ kept after closing).
 
 ## Status
 
-**0.9.0 beta, the first Windows beta. There is no public release or download yet.**
+**0.9.0 beta, the first Windows beta. There is no public release or download yet.** A small,
+invited beta on Windows 11 is being prepared, followed by a first round of hands-on usability
+sessions with artists.
 
 | | |
 |---|---|
 | Windows 11 (64-bit) | Tested on one computer, by automation |
 | Windows 10 1703 or later (64-bit) | Expected to run; not yet tested |
-| Use by real people | Not yet: no usability testing has happened |
+| Use by real people | Not yet: the first usability sessions have not taken place |
 | Screen readers, pen tablets | Not supported |
 | Code signing | Not signed; SmartScreen warns on first start |
 
-Measured on the development computer with the beta build: the executable is about 2.9 MB, its
+### Recent changes
+
+- **Interface refinement.** Status line and hints that fit at 150 % text and Large text; the
+  four workspace layouts adapt to narrow windows and 2x scaling instead of clipping panels;
+  timeline frame numbers up to four digits fit without overlapping.
+- **Clearer controls.** Tooltips and keyboard-focus hints for icon-only buttons, including the
+  panel and Export scale controls; the high-contrast default button is marked by more than
+  colour; clearer labels, units and guidance in the New sprite and Export dialogs.
+- **Tiles.** An empty Tiles panel now offers to add a tilemap layer directly.
+- **Safety fixes.** Plugins load only if they were approved in Pikslar's own install review;
+  before saving over a changed file on slow storage, Pikslar waits at most 5 seconds for its
+  check and then asks, instead of holding the window.
+
+### Measured
+
+Measured on the development computer with the beta build: the executable is about 3 MB, its
 window exists about 21 ms after it starts (median), input reaches the screen in about 3 ms
 (median), and it uses no processor time when idle. These are test results from one Windows 11
 computer, not guarantees. The full list of what is known to be missing or untested is in

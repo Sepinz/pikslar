@@ -34,11 +34,22 @@ fn version_prints_the_version_and_commit_and_exits_without_touching_anything() {
     let commit = option_env!("PIKSLAR_COMMIT")
         .filter(|c| !c.trim().is_empty())
         .unwrap_or("unknown");
-    let want = format!(
-        "Pikslar {} ({})\n",
-        env!("CARGO_PKG_VERSION"),
-        commit.trim()
-    );
+    // A usability build carries a label such as "U1" (spikes/make-usability-kit.ps1).
+    let label = option_env!("PIKSLAR_BUILD_LABEL")
+        .map(str::trim)
+        .filter(|l| !l.is_empty());
+    let want = match label {
+        Some(l) => format!(
+            "Pikslar {} {l} ({})\n",
+            env!("CARGO_PKG_VERSION"),
+            commit.trim()
+        ),
+        None => format!(
+            "Pikslar {} ({})\n",
+            env!("CARGO_PKG_VERSION"),
+            commit.trim()
+        ),
+    };
     assert_eq!(text, want);
     let left: Vec<_> = std::fs::read_dir(&home).expect("the folder").collect();
     assert!(left.is_empty(), "nothing is written: {left:?}");

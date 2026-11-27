@@ -205,16 +205,6 @@ impl App {
         self.say_hint_over(rect, hint);
     }
 
-    /// Like `note_hint` for a tab shown as its icon alone, which also says its name while the
-    /// keyboard has focus on it (`id`): the pointer is not the only way to reach one.
-    pub fn note_tab_hint(&mut self, rect: Rect, id: u32, name: &'static str) {
-        self.note_hint(rect, name);
-        let free = self.menu.is_none() && !self.ui.pointer_covered();
-        if self.hint.is_none() && free && self.ui.focus.focused() == Some(id) {
-            self.hint = Some(Cow::Borrowed(name));
-        }
-    }
-
     /// Like `note_hint`, for a control whose stable name (the one `--layout-dump` lists) is
     /// shorter than the hint it shows.
     pub fn note_hint_named(&mut self, rect: Rect, name: &str, hint: impl Into<Cow<'static, str>>) {
@@ -222,12 +212,21 @@ impl App {
         self.say_hint_over(rect, hint.into());
     }
 
-    /// The status line's hint while the pointer is over `rect`; under an open menu or dialog,
-    /// controls say nothing.
-    fn say_hint_over(&mut self, rect: Rect, hint: Cow<'static, str>) {
+    /// The status line's hint while the pointer is over `rect`, or while the keyboard focus is
+    /// on the control drawn there and the pointer is over nothing with a hint of its own: the
+    /// pointer is not the only way to reach a control. Under an open menu or dialog, controls
+    /// say nothing.
+    pub(crate) fn say_hint_over(&mut self, rect: Rect, hint: Cow<'static, str>) {
         let under = self.menu.is_some() || self.ui.pointer_covered();
-        if !under && rect.contains(self.ui.mouse.0, self.ui.mouse.1) {
+        if under {
+            return;
+        }
+        if rect.contains(self.ui.mouse.0, self.ui.mouse.1) {
             self.hint = Some(hint);
+            self.hint_from_focus = false;
+        } else if self.hint.is_none() && self.focus_rect == Some(rect) {
+            self.hint = Some(hint);
+            self.hint_from_focus = true;
         }
     }
 
@@ -359,18 +358,25 @@ impl App {
             return;
         };
         let s = self.ui.scale;
-        let (w, h) = (360 * s, 188 * s);
+        let ts = self.ui.text_scale();
+        // A row's name above its choices: as tall as the face's capitals and a gap of 6 units.
+        let named = cap_height() * ts + 6 * s;
+        let (w, h) = (360 * s, 188 * s + 2 * named);
         let area = self.layout.canvas;
         let panel = Rect::new(area.x + (area.w - w) / 2, area.y + (area.h - h) / 2, w, h);
         pikslar_ui::chrome::popup(sf, panel, s);
         self.ui.focus.collect(true);
-        let ts = self.ui.text_scale();
         let left = panel.x + 16 * s;
         draw_text(sf, left, panel.y + 14 * s, "New sprite", theme::text(), ts);
-        self.draw_size_choices(sf, &mut dialog, left, panel.y + 40 * s);
-        self.draw_mode_choices(sf, &mut dialog, left, panel.y + 84 * s);
+        let muted = theme::muted();
+        let sizes_y = panel.y + 40 * s;
+        draw_text(sf, left, sizes_y, "Size (px, square)", muted, ts);
+        self.draw_size_choices(sf, &mut dialog, left, sizes_y + named);
+        let modes_y = panel.y + 84 * s + named;
+        draw_text(sf, left, modes_y, "Color mode", muted, ts);
+        self.draw_mode_choices(sf, &mut dialog, left, modes_y + named);
         self.new_dialog = Some(dialog);
-        let row = panel.y + 144 * s;
+        let row = panel.y + 144 * s + 2 * named;
         let (create, cancel) = (
             Rect::new(left, row, 100 * s, 28 * s),
             Rect::new(left + 108 * s, row, 100 * s, 28 * s),
@@ -393,6 +399,7 @@ impl App {
         for (i, &size) in NEW_SIZES.iter().enumerate() {
             let rect = Rect::new(x + i as i32 * 54 * s, y, 50 * s, 32 * s);
             let label = size.to_string();
+            self.note_hint_named(rect, &label, format!("{size} by {size} pixels"));
             if button(
                 &mut self.ui,
                 sf,
@@ -409,9 +416,21 @@ impl App {
 
     fn draw_mode_choices(&mut self, sf: &mut Surface<'_>, dialog: &mut NewDialog, x: i32, y: i32) {
         let s = self.ui.scale;
-        let modes = [(ColorMode::Palette, "Palette"), (ColorMode::Rgba, "RGBA")];
-        for (i, (mode, label)) in modes.iter().enumerate() {
+        let modes = [
+            (
+                ColorMode::Palette,
+                "Palette",
+                "Palette: each pixel is a swatch, so changing a swatch recolors the picture",
+            ),
+            (
+                ColorMode::Rgba,
+                "RGBA",
+                "RGBA: each pixel keeps its own color and alpha",
+            ),
+        ];
+        for (i, (mode, label, hint)) in modes.iter().enumerate() {
             let rect = Rect::new(x + i as i32 * 124 * s, y, 120 * s, 32 * s);
+            self.note_hint_named(rect, label, *hint);
             if button(
                 &mut self.ui,
                 sf,

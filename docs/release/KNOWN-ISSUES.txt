@@ -74,6 +74,28 @@ copy until the mouse button is released. Sign-out, restart and shutdown
 were tested by sending Windows' messages to the program, not by really
 signing out.
 
+1.5 Slow storage while saving
+
+Before saving over a project whose file time changed, Pikslar compares the
+file with what it last saw. On storage too slow to finish that within 5
+seconds, it stops waiting and asks whether to save over the file; the
+window does not freeze. During those 5 seconds Esc does not cut the wait
+short. A read that never finishes stays waiting in the background, one per
+such save. The first check of the file's time still runs on the window
+itself, so a network drive that stops answering can hold the window there.
+None of this was tested on real slow storage: the delay was simulated.
+
+1.6 Other rare cases found by review
+
+- If Windows cannot start the program's saving thread (for example when it
+  is out of memory), the save runs on the window itself, which then waits
+  until the save is done.
+- A deliberately crafted PNG can make Pikslar reserve about 1 GB of memory.
+  If that fails, the program closes at once, as after any crash: work since
+  the last recovery copy (at most the last few seconds) is lost.
+- View, "Delete crash and saving notes" deletes the notes without asking
+  first. It never touches your artwork.
+
 
 2. Windows versions, settings and hardware
 ------------------------------------------
@@ -114,7 +136,15 @@ on ARM, standard (non-administrator) accounts, managed work or school PCs
 and antivirus programs other than Microsoft Defender have not been tested.
 
 2.7 Screen readers are not supported. Pikslar draws its own interface and
-does not yet expose it to Narrator, NVDA or JAWS.
+has no Windows UI Automation support at all, so Narrator, NVDA and JAWS
+cannot read or operate any of it, not even the window's menus and dialogs.
+The names and roles the controls carry inside the program are used only by
+its own tests and scripts; nothing passes them to Windows. Do not rely on
+Pikslar with a screen reader. What there is: the controls of the panels and
+dialogs can be reached with Tab, the focused control has a visible ring, and
+its hint is shown in the status line while the pointer is not on another
+control; high contrast and Large text are followed. None of this has been
+tried by someone who relies on it.
 
 2.8 Pen tablets are not supported specially: there is no pressure or tilt,
 and a pen works only as Windows turns it into mouse input. Not tested.
@@ -129,10 +159,10 @@ and a pen works only as Windows turns it into mouse input. Not tested.
 Smart App Control turned on cannot run Pikslar at all. See
 TROUBLESHOOTING.txt. Never turn these protections off for Pikslar.
 
-3.2 pikslar.exe is larger than its own size target: 2,826 KiB at build
-be1f9f2, against a soft target of 2,816 KiB. This was a deliberate choice:
-the crash and saving diagnostics were kept rather than removed to save
-space. It has no effect on use.
+3.2 pikslar.exe is larger than its own size target: 2,882 KiB at build
+1c8346d (RC4), against a soft target of 2,816 KiB. This was a deliberate
+choice: the crash and saving diagnostics, and the RC4 safety fixes, were
+kept rather than removed to save space. It has no effect on use.
 
 3.3 The licence (PolyForm Noncommercial 1.0.0) allows noncommercial use
 only; commercial use needs separate permission (LICENSE.txt).
@@ -196,6 +226,19 @@ square cannot be kept and is reported.
 the development computer, so a slower computer stops a runaway script later.
 A plugin's fingerprint detects changes to its files, but does not prove who
 made it.
+
+Plugins installed with an earlier test build (RC3 or before) are disabled
+after upgrading, as "not installed through Pikslar's install review":
+approvals are now kept in plugin-approvals.txt, and earlier builds did not
+write it. To use one again, copy its folder out of Pikslar's plugins folder,
+delete installed.json from the copy, then review and install the copy. A
+program running as you can still edit that file, as it can any of
+Pikslar's settings.
+
+Some command-line switches meant for development (for example
+--settings-dir, --recovery-dir, --run-script) are still in the program. They
+do nothing unless typed on a command line, and Windows' search for system
+DLLs is not further restricted than its default.
 
 6.3 Rewind (off unless turned on) was tested on one computer and one disk.
 It keeps the undo side of history, not redo or selections. Its store finds

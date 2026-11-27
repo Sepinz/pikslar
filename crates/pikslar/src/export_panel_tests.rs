@@ -203,7 +203,7 @@ fn every_row_is_named_and_every_choice_shows_both_of_its_options() {
     draw_whole_at(&mut a, size.0, size.1);
     let log = pikslar_ui::font::take_text_log();
     pikslar_ui::font::log_text(false);
-    for name in ["Format", "Frames", "Layers", "Colour"] {
+    for name in ["Format", "Frames", "Layers", "Color"] {
         assert!(
             log.texts.iter().any(|(_, t)| t == name),
             "{name} is a row name"

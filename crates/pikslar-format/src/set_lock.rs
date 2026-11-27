@@ -64,7 +64,7 @@ impl SetLock {
         let tag = run_tag(&path);
         let (file, swept) = match open(&path, true) {
             Ok(file) => (marked(file, &path, &tag)?, Vec::new()),
-            Err(e) if e.kind() == io::ErrorKind::AlreadyExists => left_behind(&path, &tag)?,
+            Err(e) if e.kind() == io::ErrorKind::AlreadyExists => left_behind(&path, &tag, target)?,
             Err(e) => return Err(busy_or(e, &path)),
         };
         Ok(SetLock {
@@ -191,11 +191,40 @@ fn recorded(text: &[u8]) -> Option<Vec<PathBuf>> {
         .collect()
 }
 
-/// Removes what a stopped run made: each recorded path that is a plain file now. A folder or a
-/// link at such a name was not made by the run, and is kept.
-fn sweep(recorded: Vec<PathBuf>) -> Vec<PathBuf> {
+/// The folder `path` is in, resolved, in the case Windows ignores.
+fn folder_of(path: &Path) -> Option<String> {
+    let folder = match path.parent() {
+        Some(folder) if !folder.as_os_str().is_empty() => folder,
+        _ => Path::new("."),
+    };
+    fs::canonicalize(folder)
+        .ok()
+        .map(|f| f.to_string_lossy().to_lowercase())
+}
+
+/// Removes what a stopped run made: each recorded path in the set's own folder that is a plain
+/// file now. A folder or a link at such a name was not made by the run, and is kept, and so is
+/// a path anywhere else: an export only ever makes its temporary files beside the set
+/// (review finding S5, RC3).
+fn sweep(recorded: Vec<PathBuf>, target: &Path) -> Vec<PathBuf> {
+    let Some(home) = folder_of(target) else {
+        return Vec::new();
+    };
+    let stem = target
+        .file_stem()
+        .map(|s| s.to_string_lossy().to_lowercase())
+        .unwrap_or_default();
     recorded
         .into_iter()
+        .filter(|temp| {
+            temp.components()
+                .all(|c| c != std::path::Component::ParentDir)
+        })
+        .filter(|temp| {
+            temp.file_name()
+                .is_some_and(|n| n.to_string_lossy().to_lowercase().starts_with(&stem))
+        })
+        .filter(|temp| folder_of(temp).as_deref() == Some(home.as_str()))
         .filter(|temp| fs::symlink_metadata(temp).is_ok_and(|m| m.file_type().is_file()))
         .filter(|temp| fs::remove_file(temp).is_ok())
         .collect()
@@ -204,7 +233,7 @@ fn sweep(recorded: Vec<PathBuf>) -> Vec<PathBuf> {
 /// A lock an export left when it stopped without finishing. Nothing holds it now and it is in
 /// Pikslar's words, so it is taken over, and the temporary files it names are removed.
 /// Anything else at its name is someone's file.
-fn left_behind(path: &Path, tag: &str) -> io::Result<(File, Vec<PathBuf>)> {
+fn left_behind(path: &Path, tag: &str, target: &Path) -> io::Result<(File, Vec<PathBuf>)> {
     let mut file = open(path, false).map_err(|e| busy_or(e, path))?;
     let mut text = Vec::new();
     Read::by_ref(&mut file)
@@ -214,7 +243,7 @@ fn left_behind(path: &Path, tag: &str) -> io::Result<(File, Vec<PathBuf>)> {
         .then(|| recorded(&text))
         .flatten()
         .ok_or_else(|| in_the_way(path))?;
-    let swept = sweep(temps);
+    let swept = sweep(temps, target);
     Ok((marked(file, path, tag)?, swept))
 }
 
@@ -496,5 +525,41 @@ mod tests {
         drop(held);
         free_to_replace(&path).expect("free again");
         fs::remove_dir_all(d).expect("cleanup");
+    }
+
+    #[test]
+    fn taking_over_never_removes_a_recorded_path_outside_the_sets_folder() {
+        let d = dir("elsewhere");
+        let other = dir("elsewhere-other");
+        let target = d.join("walk.json");
+        let tag = "0123abcd";
+        let outside = other.join(format!("notes.txt.{tag}{TEMP_SUFFIX}"));
+        let inside = d.join(format!("walk.json.{tag}{TEMP_SUFFIX}"));
+        fs::write(&outside, b"someone's").expect("outside");
+        fs::write(&inside, b"left").expect("inside");
+        // In the set's folder, but not the set's: another name, and one reached through "..".
+        let another = d.join(format!("notes.txt.{tag}{TEMP_SUFFIX}"));
+        fs::write(&another, b"someone's").expect("another");
+        fs::create_dir(d.join("sub")).expect("sub");
+        let dotted = d
+            .join("sub")
+            .join("..")
+            .join(format!("walkies.{tag}{TEMP_SUFFIX}"));
+        fs::write(&dotted, b"someone's").expect("dotted");
+        let mut text = MARK.to_vec();
+        text.extend(format!("{RUN}{tag}\n").bytes());
+        for temp in [&outside, &inside, &another, &dotted] {
+            text.extend(temp.to_string_lossy().bytes());
+            text.push(b'\n');
+        }
+        fs::write(lock_path(&target), &text).expect("planted lock");
+        let lock = SetLock::take(&target).expect("taken over");
+        assert_eq!(lock.swept(), std::slice::from_ref(&inside));
+        assert!(outside.exists(), "a file outside the set's folder is kept");
+        assert!(another.exists(), "a file not named for the set is kept");
+        assert!(dotted.exists(), "a path through .. is kept");
+        drop(lock);
+        fs::remove_dir_all(d).expect("cleanup");
+        fs::remove_dir_all(other).expect("cleanup");
     }
 }

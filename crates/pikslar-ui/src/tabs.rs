@@ -28,7 +28,8 @@ pub const MAX_TABS: usize = 16;
 /// The ids a strip takes from the `id` it is given: `id` itself, a tab each from `id + 1`, the
 /// menu button at `id + 17` and the fold chevron at `id + 18`.
 pub const TAB_IDS: u32 = 19;
-const MENU: u32 = 17;
+/// The slot menu button's offset from the strip's id.
+pub const MENU: u32 = 17;
 /// The fold chevron's offset from the strip's id.
 pub const FOLD: u32 = 18;
 /// Space either side of a tab's words, in units.
@@ -92,9 +93,11 @@ fn plan(strip: Strip<'_>, tabs: &[&str], ts: i32, s: i32, room: i32) -> ([i32; M
     // A dock narrower than its two buttons leaves no room, never a negative one.
     let room = room.max(0);
     let mut out = [0; MAX_TABS];
-    for pad in [PAD, PAD / 2] {
+    // Whole names, closer together, then the short words of long names, before icons.
+    for (pad, short) in [(PAD, false), (PAD / 2, false), (PAD / 2, true)] {
         for (w, t) in out.iter_mut().zip(tabs) {
-            *w = text_width(t, ts) + 2 * pad * s;
+            let words = if short { short_label(t) } else { t };
+            *w = text_width(words, ts) + 2 * pad * s;
         }
         if out.iter().sum::<i32>() <= room || tabs.is_empty() {
             return (out, 0);
@@ -111,6 +114,13 @@ fn plan(strip: Strip<'_>, tabs: &[&str], ts: i32, s: i32, room: i32) -> ([i32; M
     for (n, w) in out.iter_mut().take(tabs.len()).enumerate() {
         if others >> n & 1 == 1 {
             *w = ICON_TAB * s;
+        } else {
+            // The shown tab keeps its whole name beside the icons where that fits.
+            let whole = text_width(tabs[n], ts) + PAD * s;
+            let icons = others.count_ones() as i32 * ICON_TAB * s;
+            if whole + icons <= room {
+                *w = whole;
+            }
         }
     }
     if out.iter().sum::<i32>() <= room {
@@ -164,9 +174,22 @@ pub fn tab_strip(
     }
 }
 
-/// A tab's words, cut with an ellipsis only when nothing better fits.
+/// The word a crowded strip shows for a tab whose name is several: its last, which names it
+/// ("Lint" for Pixel Lint). The tab keeps its whole name for the layout dump and its hint.
+pub fn short_label(label: &str) -> &str {
+    label.rsplit(' ').next().unwrap_or(label)
+}
+
+/// A tab's words: the whole name where it fits, else its short word, cut with an ellipsis only
+/// when nothing better fits.
 fn draw_label(sf: &mut Surface<'_>, (r, s, ts): (Rect, i32, i32), label: &str, look: Look) {
-    let words = fit_to_width(label, r.w - 2 * s, ts);
+    let room = r.w - 2 * s;
+    let label = if text_width(label, ts) <= room {
+        label
+    } else {
+        short_label(label)
+    };
+    let words = fit_to_width(label, room, ts);
     let ink = if look.chosen || look.hover {
         theme::text()
     } else {

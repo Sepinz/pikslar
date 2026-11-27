@@ -27,7 +27,9 @@ fn name_of(path: &Path) -> String {
 /// Said when a save was not made because the person kept a backup nobody decided about.
 fn kept_said(backup: &Path) -> String {
     format!(
-        "Not saved: {} is a backup left by an interrupted save, and may be the only good copy of          earlier work, so it was kept. Your work is still open: use Save as to keep it under          another name, or move the backup away, and save again",
+        "Not saved: {} is a backup left by an interrupted save, and may be the only good copy of \
+         earlier work, so it was kept. Your work is still open: use Save as to keep it under \
+         another name, or move the backup away, and save again",
         backup.display()
     )
 }

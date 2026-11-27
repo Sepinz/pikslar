@@ -245,9 +245,35 @@ fn lengths(area: Area, compact: bool, length: i32, u: Units, axis: Axis) -> ([i3
     }
     let mut px = units.map(|n| n * s);
     if t < slots.len() {
+        whole_rows(&mut px, slots, t, (compact, axis), u);
         px[t] = (length - px.iter().sum::<i32>()).max(0);
     }
     (px, used)
+}
+
+/// Draws each open sized slot but the taker `t` in whole rows of its list: room for part of a
+/// row shows nothing, so it goes to the taker, whose list may use it. Only the drawn lengths
+/// change; the sizes kept and saved are as asked.
+fn whole_rows(
+    px: &mut [i32; 3],
+    slots: &[Slot],
+    t: usize,
+    (compact, axis): (bool, Axis),
+    u: Units,
+) {
+    if axis != Axis::Down {
+        return;
+    }
+    for (i, sl) in slots.iter().enumerate() {
+        let row = match (sl.open, sl.active_panel()) {
+            (true, Some(p)) if i != t && sl.size > 0 => (u.m.row)(p) * u.s,
+            _ => 0,
+        };
+        let least = least_in(u.m, sl, compact, axis) * u.s;
+        if row > 0 && px[i] > least {
+            px[i] = least + (px[i] - least) / row * row;
+        }
+    }
 }
 
 /// Lays an area's slots out in `rect`.
@@ -336,9 +362,31 @@ fn fit_side(area: Area, compact: bool, middle: i32, u: Units) -> (Area, bool) {
     }
     let own = compact && holds_color(&area);
     match fold_to_fit(area, own, middle, u, Axis::Down) {
-        Some((a, c)) => (a, compact || c),
+        Some((a, c)) => (a, compact || c || wants_room(&a, middle, u)),
         None => (rail(area), compact),
     }
+}
+
+/// Whether a side dock holding an open Color should compact it although its least needs fit:
+/// its open lists, each with one more row than its least, do not fit beside the full Color.
+/// Compacting first keeps the lists' rows, rather than shrinking them to their least.
+fn wants_room(area: &Area, middle: i32, u: Units) -> bool {
+    let color_open = area
+        .slots()
+        .iter()
+        .any(|sl| sl.open && sl.active_panel() == Some(Panel::Color));
+    let comfortable: i32 = area
+        .slots()
+        .iter()
+        .map(|sl| {
+            let more = match (sl.open, sl.active_panel()) {
+                (true, Some(p)) => (u.m.row)(p),
+                _ => 0,
+            };
+            least_in(u.m, sl, false, Axis::Down) + more
+        })
+        .sum();
+    color_open && comfortable * u.s > middle
 }
 
 /// A side dock's width in units as asked: nothing when empty, a rail when folded.

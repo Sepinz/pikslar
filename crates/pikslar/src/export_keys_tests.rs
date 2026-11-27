@@ -82,7 +82,7 @@ fn up_and_down_move_between_rows() {
     tap(&mut a, Key::Down, PLAIN);
     assert_eq!(focused(&a), Some(ID + 20), "Visible layers");
     tap(&mut a, Key::Down, PLAIN);
-    assert_eq!(focused(&a), Some(ID + 36), "Full colour");
+    assert_eq!(focused(&a), Some(ID + 36), "RGBA");
     tap(&mut a, Key::Up, PLAIN);
     tap(&mut a, Key::Up, PLAIN);
     tap(&mut a, Key::Up, PLAIN);

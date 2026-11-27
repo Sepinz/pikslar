@@ -286,7 +286,21 @@ fn a_crowded_strip_keeps_the_shown_tab_whole_and_the_others_as_icons() {
     // The shown tab can be any of them.
     let out = crowded(&mut ui, snug_width(), 2, true);
     assert_eq!(out.compact, 0b011);
-    assert!(tab_rect(&ui, 2).w >= text_width("Pixel Lint", ts) + 8);
+    // Too snug for "Pixel Lint" beside two icons: the shown tab keeps its short word whole.
+    assert!(tab_rect(&ui, 2).w >= text_width("Lint", ts) + 8);
+}
+
+#[test]
+fn a_shown_tab_beside_icons_keeps_its_whole_name_where_that_fits() {
+    let ts = Ui::new().text_scale();
+    // Long one-word neighbours: no short word helps them, so they become icons, and the room
+    // left is enough for the shown tab's whole name.
+    let tabs = ["Pixel Lint", "Palettebrowser", "Referenceimages"];
+    let w = text_width("Pixel Lint", ts) + 8 + 2 * 24 + 48;
+    let mut ui = Ui::new();
+    let out = narrow(&mut ui, &tabs, (w, 0), true);
+    assert_eq!(out.compact, 0b110);
+    assert!(tab_rect(&ui, 0).w >= text_width("Pixel Lint", ts) + 8);
 }
 
 #[test]
@@ -318,7 +332,7 @@ fn a_tab_is_never_two_letters_and_dots() {
         let out = crowded(&mut ui, w, 1, true);
         for n in 0..3u32 {
             let r = tab_rect(&ui, n);
-            let whole = text_width(CROWDED[n as usize], ts) + 2;
+            let whole = text_width(short_label(CROWDED[n as usize]), ts) + 2;
             let icon = out.compact >> n & 1 == 1;
             assert!(
                 icon || r.w >= whole,
@@ -329,10 +343,43 @@ fn a_tab_is_never_two_letters_and_dots() {
     }
 }
 
-/// A strip width whose room is a little under what the names need with half padding.
+/// A strip width whose room is a little under what even the short words of the names need
+/// with half padding, so icons are the next step.
 fn snug_width() -> i32 {
     let ts = Ui::new().text_scale();
-    CROWDED.iter().map(|t| text_width(t, ts) + 8).sum::<i32>() - 4 + 48
+    CROWDED
+        .iter()
+        .map(|t| text_width(short_label(t), ts) + 8)
+        .sum::<i32>()
+        - 4
+        + 48
+}
+
+#[test]
+fn a_strip_too_narrow_for_whole_names_shows_the_short_word_before_any_icon() {
+    let ts = Ui::new().text_scale();
+    let whole: i32 = CROWDED.iter().map(|t| text_width(t, ts) + 8).sum();
+    let short: i32 = CROWDED
+        .iter()
+        .map(|t| text_width(short_label(t), ts) + 8)
+        .sum();
+    assert!(short < whole);
+    let mut ui = Ui::new();
+    crate::font::log_text(true);
+    let out = crowded(&mut ui, short + 48, 0, true);
+    let log = crate::font::take_text_log();
+    crate::font::log_text(false);
+    assert_eq!(out.compact, 0, "no icons while the short words fit");
+    let words: Vec<&str> = log.texts.iter().map(|(_, t)| t.as_str()).collect();
+    assert!(
+        words.contains(&"Lint"),
+        "Pixel Lint shows as Lint: {words:?}"
+    );
+    assert!(words.contains(&"Layers") && words.contains(&"Slices"));
+    let last = tab_rect(&ui, 2);
+    assert!(last.right() <= short, "inside the room: {last:?}");
+    assert_eq!(short_label("Pixel Lint"), "Lint");
+    assert_eq!(short_label("Layers"), "Layers");
 }
 
 /// A strip of `tabs` (each with an icon when `icons`) in a row `w` wide, drawn once.

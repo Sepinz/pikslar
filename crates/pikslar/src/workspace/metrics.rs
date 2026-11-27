@@ -43,6 +43,15 @@ pub(crate) struct Metrics {
     /// What a folded slot takes when drawn, tab strip included: no more than `folded`, and the
     /// room between the two goes to the open slots.
     pub shown: fn(Panel) -> i32,
+    /// The pitch of an open panel's list rows down a side dock, in units, or 0 for a panel
+    /// without one. A sized slot is drawn in whole rows, its rest going to the slot that takes
+    /// the rest, and a side dock that cannot give every list one more row than its least
+    /// compacts Color first (R1, A11).
+    pub row: fn(Panel) -> i32,
+}
+
+fn no_rows(_: Panel) -> i32 {
+    0
 }
 
 fn strip_only(_: Panel) -> i32 {
@@ -68,5 +77,6 @@ impl Metrics {
         least_across: Panel::least_across,
         folded: strip_only,
         shown: strip_only,
+        row: no_rows,
     };
 }

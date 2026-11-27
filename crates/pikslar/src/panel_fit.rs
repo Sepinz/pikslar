@@ -4,6 +4,9 @@ use pikslar_render::Rect;
 
 pub(crate) const FULL_COLOR: i32 = 150;
 pub(crate) const COMPACT_COLOR: i32 = 74;
+
+/// The compact block's two rows of sliders, at a 24-unit pitch, with the gap under them.
+pub(crate) const COLOR_CHANNELS: i32 = 2 * 24 + 4;
 /// A folded color section: the swatch of the current color and its value, on one row.
 pub(crate) const FOLDED_COLOR: i32 = 22;
 /// The active layer's settings under the list, with the gap above them.

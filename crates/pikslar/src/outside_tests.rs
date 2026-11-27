@@ -209,3 +209,72 @@ fn a_save_whose_stamp_was_not_held_still_is_compared_by_its_bytes() {
     );
     let _ = fs::remove_dir_all(&dir);
 }
+
+/// Review finding C1 (RC3): a save that left bytes not known to be right, on a document with no
+/// change since its last save. The file on disk is no longer the work, so the document must
+/// count as not saved: closing asks, and the recovery copy is kept.
+fn left_unverified_on_an_unmodified_document(name: &str, left_backup: bool) {
+    use pikslar_format::publish_back::{Left, NotKept};
+    let dir = temp_dir(name);
+    let (mut a, art) = saved_app(&dir);
+    assert!(save(&mut a), "the edit is saved");
+    assert!(!a.is_modified(), "nothing changed since the save");
+    fs::write(&art, OTHER).expect("unverified bytes");
+    let left = if left_backup {
+        Left::BackupAt(pikslar_format::publish::backup_path(&art))
+    } else {
+        Left::Unknown
+    };
+    let kept = NotKept::new("injected".to_string(), left);
+    let io = std::io::Error::new(std::io::ErrorKind::InvalidData, kept);
+    let error = files::FileError::from(pikslar_format::FormatError::from(io));
+    a.save_ended_failed(&art, error);
+    assert!(
+        a.is_modified(),
+        "the file holds other bytes, so the work is not saved there"
+    );
+    let _ = fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn a_failed_save_that_left_other_bytes_with_the_backup_kept_leaves_the_work_unsaved() {
+    left_unverified_on_an_unmodified_document("c1-backup", true);
+}
+
+#[test]
+fn a_failed_save_that_left_other_bytes_and_no_backup_leaves_the_work_unsaved() {
+    left_unverified_on_an_unmodified_document("c1-unknown", false);
+}
+
+/// Review finding C2 (RC3): the bytes of a touched file are compared on another thread. On
+/// storage too slow to read them in time the save asks rather than waits, and nothing is
+/// written over unasked.
+#[test]
+fn a_compare_too_slow_to_finish_asks_instead_of_freezing_the_window() {
+    static ASKED: AtomicUsize = AtomicUsize::new(0);
+    let dir = temp_dir("slow-compare");
+    let (mut a, art) = saved_app(&dir);
+    let later = SystemTime::now() + Duration::from_secs(60);
+    let file = fs::OpenOptions::new().write(true).open(&art).expect("open");
+    file.set_modified(later).expect("touched");
+    drop(file);
+    let before = fs::read(&art).expect("the file");
+    a.compare = (Duration::from_millis(200), Some(Duration::from_secs(3)));
+    a.ask_changed = |_, _| {
+        ASKED.fetch_add(1, Ordering::Relaxed);
+        ChangedChoice::Cancel
+    };
+    let started = std::time::Instant::now();
+    assert!(!save(&mut a), "cancelled");
+    assert!(
+        started.elapsed() < Duration::from_secs(2),
+        "the window did not wait for the read: {:?}",
+        started.elapsed()
+    );
+    assert_eq!(ASKED.load(Ordering::Relaxed), 1, "asked once");
+    assert_eq!(fs::read(&art).expect("the file"), before, "left alone");
+    a.compare = (crate::outside::COMPARE_WAIT, None);
+    a.ask_changed = |_, _| panic!("the same bytes, read in time, need no question");
+    assert!(save(&mut a), "read in time: saved without a question");
+    let _ = fs::remove_dir_all(&dir);
+}

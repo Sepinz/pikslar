@@ -9,6 +9,7 @@
 //! See `docs/plugins.md` for the format, the capabilities, the install flow and the threat
 //! model.
 
+mod approvals;
 mod capability;
 mod error;
 pub mod files;

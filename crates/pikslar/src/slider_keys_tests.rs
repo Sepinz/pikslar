@@ -92,7 +92,7 @@ fn enter_falls_through_when_the_focused_export_button_is_gone() {
     let mut a = app(2);
     a.open_export_dialog(false);
     draw_whole(&mut a);
-    // Focus "Indexed" (a PNG option), then pick GIF with a digit, which has no such button.
+    // Focus "Palette" (a PNG option), then pick GIF with a digit, which has no such button.
     a.ui.focus.set(530);
     a.key_down(
         Key::Char(b'4'),

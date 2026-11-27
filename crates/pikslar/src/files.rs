@@ -47,6 +47,17 @@ impl fmt::Display for FileError {
     }
 }
 
+impl FileError {
+    /// The replaced file that did not read back, from a save or an upgrade save.
+    pub fn not_kept(&self) -> Option<&pikslar_format::publish_back::NotKept> {
+        match self {
+            FileError::Format(f) => pikslar_format::publish_back::not_kept(f),
+            FileError::Upgrade(u) => u.not_kept(),
+            _ => None,
+        }
+    }
+}
+
 impl From<FormatError> for FileError {
     fn from(e: FormatError) -> Self {
         FileError::Format(e)
@@ -167,7 +178,11 @@ pub fn protected_path(path: &Path, notes: &piks::LoadNotes) -> Option<PathBuf> {
 pub fn same_file(a: &Path, b: &Path) -> bool {
     match (a.canonicalize(), b.canonicalize()) {
         (Ok(a), Ok(b)) => a == b,
-        _ => a == b,
+        // A file that is gone: its names, as Windows compares them.
+        _ => {
+            let fold = |p: &Path| p.to_string_lossy().replace('/', "\\").to_lowercase();
+            fold(a) == fold(b)
+        }
     }
 }
 
@@ -340,8 +355,8 @@ pub(crate) fn save_checked(
         passed = Some(step);
         Ok(())
     };
-    let publish = &mut crate::system_publish::SystemPublish { expect };
-    let written = write_atomic_with(path, &bytes, &mut step, publish);
+    let mut publish = crate::system_publish::publisher(path, expect);
+    let written = write_atomic_with(path, &bytes, &mut step, publish.as_mut());
     match written {
         Ok(placed) => Ok((bytes, placed)),
         Err(e) => {
@@ -369,8 +384,8 @@ pub fn save_upgrading(
         return Err(upgrade_failed(UpgradeError::Changed));
     }
     let bytes = checked_bytes(doc)?;
-    let publish = &mut crate::system_publish::SystemPublish { expect };
-    let placed = upgrade::upgrade_with(path, version, &bytes, &mut |_| Ok(()), publish)
+    let mut publish = crate::system_publish::publisher(path, expect);
+    let placed = upgrade::upgrade_with(path, version, &bytes, &mut |_| Ok(()), publish.as_mut())
         .map_err(upgrade_failed)?;
     Ok((bytes, placed))
 }
@@ -437,6 +452,15 @@ mod tests {
     use pikslar_render::{flatten, Compositor};
 
     const RED: u32 = rgba(255, 0, 0, 255);
+
+    #[test]
+    fn a_file_that_is_gone_is_the_same_file_whatever_the_case_of_its_name() {
+        let gone = std::env::temp_dir().join("pikslar-gone-dir-never-made");
+        let a = gone.join("Art.piks");
+        let b = Path::new(&gone.to_string_lossy().to_uppercase()).join("art.PIKS");
+        assert!(same_file(&a, &b));
+        assert!(!same_file(&a, &gone.join("other.piks")));
+    }
 
     fn image(px: Vec<u32>) -> Image {
         Image {

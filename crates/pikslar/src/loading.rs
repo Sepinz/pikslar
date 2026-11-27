@@ -221,7 +221,7 @@ impl App {
             self.stopping = None;
         }
         let busy = self.gesture != Gesture::None || self.ui.down || self.panel_open();
-        if self.stopping.is_none() && !busy {
+        if self.stopping.is_none() && !busy && self.save_job.is_none() {
             if let Some((path, then)) = self.open_after_stop.take() {
                 let result = files::open(&path);
                 self.after_open(window, path, then, result);
@@ -229,7 +229,8 @@ impl App {
             }
         }
         let ready = self.loading.as_ref().is_some_and(Loading::is_done);
-        if !ready || busy {
+        // A save under way may yet fail and leave the work unsaved: the open waits for it.
+        if !ready || busy || self.save_job.is_some() {
             return;
         }
         if let Some(loading) = self.loading.take() {

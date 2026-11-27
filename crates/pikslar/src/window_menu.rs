@@ -110,6 +110,16 @@ impl App {
         rows
     }
 
+    /// How many workspace rows the Window menu starts with.
+    pub(crate) fn preset_count(&self) -> usize {
+        self.preset_rows().len()
+    }
+
+    /// How many panel rows follow them.
+    pub(crate) fn panel_count(&self) -> usize {
+        self.panel_rows().len()
+    }
+
     pub(crate) fn window_entries(&self) -> Entries {
         self.window_rows()
             .into_iter()
