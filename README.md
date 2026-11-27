@@ -1,49 +1,85 @@
 <p align="center">
-  <img src="site/assets/mark.svg" width="72" height="72" alt="">
-</p>
-
-<h1 align="center">Pikslar</h1>
-
-<p align="center">
-  A lightweight pixel-art editor and animation studio for Windows, written from scratch in Rust.
+  <img src="docs/readme/banner.svg" width="100%" alt="Pikslar: pixel art and animation for Windows, 0.9 beta">
 </p>
 
 <p align="center">
-  <a href="#status">Status: 0.9.0 beta</a> ·
-  <a href="#build">Build</a> ·
+  <b>A lightweight pixel-art editor and animation studio for Windows, written from scratch in Rust.</b><br>
+  One small executable. No installer, no runtime, no third-party libraries in its own code.
+</p>
+
+<p align="center">
+  <img alt="Windows 10 and 11" src="https://img.shields.io/badge/Windows-10%20%7C%2011-1b1c21?style=flat-square&labelColor=2a2c34">
+  <img alt="Written in Rust" src="https://img.shields.io/badge/Rust-from%20scratch-1b1c21?style=flat-square&labelColor=2a2c34">
+  <img alt="Status: beta" src="https://img.shields.io/badge/status-0.9%20beta-ffb347?style=flat-square&labelColor=2a2c34">
+  <img alt="Licence: PolyForm Noncommercial" src="https://img.shields.io/badge/licence-PolyForm%20NC-1b1c21?style=flat-square&labelColor=2a2c34">
+</p>
+
+<p align="center">
+  <a href="#features">Features</a> ·
+  <a href="#build-and-run">Build</a> ·
   <a href="docs/release/README.txt">Using the beta</a> ·
   <a href="docs/shortcuts.md">Shortcuts</a> ·
-  <a href="#licence">Licence</a>
+  <a href="https://sepinz.github.io/pikslar/">Website</a>
+</p>
+
+<br>
+
+<p align="center">
+  <img src="site/assets/img/editor-2x.png" width="100%" alt="The Pikslar window: tools on the left, a pixel-art mushroom house on the canvas, palette and preview panels on the right, and the timeline below.">
 </p>
 
 <p align="center">
-  <img src="site/assets/img/editor-2x.png" width="960" alt="The Pikslar window: tools on the left, a pixel-art mushroom house on the canvas, palette and preview panels on the right, and the timeline below.">
+  <b>~3 MB</b> one executable &nbsp;·&nbsp; <b>~21 ms</b> to a window &nbsp;·&nbsp;
+  <b>~3 ms</b> input to screen &nbsp;·&nbsp; <b>0 %</b> CPU when idle<br>
+  <sub>Medians measured on one Windows 11 development computer with the beta build. Test results, not guarantees.</sub>
 </p>
 
-Pikslar is a native Win32 program for drawing and animating sprites. It is one small executable
-with no installer, no runtime and no third-party libraries in its own code, and it is measured
-against recorded performance limits on every change.
+<p align="center"><img src="docs/readme/palette.svg" width="320" height="8" alt=""></p>
 
-## What it does
+## Features
 
-- **Drawing.** Pencil, eraser, fill, line, rectangle, picker and text, with pixel-perfect strokes,
-  Line Rhythm, brush sizes and custom brushes captured from a selection.
-- **Layers.** Groups, opacity, nine blend modes, locking, merging, and reference layers for
-  tracing that never reach an export.
-- **Animation.** A timeline of every layer against every frame: linked cels, holds, tags, frame
-  timing, position tweens with easing, onion skin and a true-size preview.
-- **Selections.** Box, lasso and magic wand; move, flip and rotate the picked-up pixels.
-- **Palettes.** Groups, sorting, Oklab ramps, lossless remaps; GIMP, JASC and hex palette files.
-- **Tilemaps.** Tilesets, tilemap layers and automatic terrains, exported for the Tiled editor.
-- **Export.** PNG, sprite sheets with JSON, sequences, GIF, APNG, indexed PNG, ICO and CUR, scaled
-  by whole numbers, also from the separate `pikslar-cli` tool.
-- **Safe saving and recovery.** Saving runs in the background and replaces the old file only after
-  the new one has been read back; a recovery copy of unsaved work is kept while you draw.
-- **Keyboard and contrast.** Every control is reachable from the keyboard, shortcuts can be
-  changed, and the interface follows Windows high contrast and text size.
+<table>
+  <tr>
+    <td width="50%" valign="top">
+      <h4>Draw</h4>
+      Pencil, eraser, fill, line, rectangle, picker and text, with pixel-perfect strokes, Line
+      Rhythm, brush sizes and custom brushes captured from a selection.
+    </td>
+    <td width="50%" valign="top">
+      <h4>Animate</h4>
+      A timeline of every layer against every frame: linked cels, holds, tags, frame timing,
+      position tweens with easing, onion skin and a true-size preview.
+    </td>
+  </tr>
+  <tr>
+    <td valign="top">
+      <h4>Layers and selections</h4>
+      Groups, opacity, nine blend modes, locking, merging and reference layers. Box, lasso and
+      magic wand; move, flip and rotate the picked-up pixels.
+    </td>
+    <td valign="top">
+      <h4>Palettes and tilemaps</h4>
+      Palette groups, sorting, Oklab ramps and lossless remaps; GIMP, JASC and hex files.
+      Tilesets, tilemap layers and automatic terrains, exported for Tiled.
+    </td>
+  </tr>
+  <tr>
+    <td valign="top">
+      <h4>Export</h4>
+      PNG, sprite sheets with JSON, sequences, GIF, APNG, indexed PNG, ICO and CUR, scaled by
+      whole numbers, also from the separate command-line tool.
+    </td>
+    <td valign="top">
+      <h4>Safe by default</h4>
+      Saving runs in the background and replaces the old file only after the new one has been
+      read back. A recovery copy of unsaved work is kept while you draw.
+    </td>
+  </tr>
+</table>
 
-Experimental in this beta: read-only Aseprite import, scripting, plugins and Rewind (undo history
-kept after closing).
+Every control is reachable from the keyboard, shortcuts can be changed, and the interface follows
+Windows high contrast and text size. Experimental in this beta: read-only Aseprite import,
+scripting, plugins and Rewind (undo history kept after closing).
 
 <table>
   <tr>
@@ -51,18 +87,19 @@ kept after closing).
     <td width="50%"><img src="site/assets/img/contrast-black-1x.png" alt="Pikslar drawn in Windows high-contrast colours."></td>
   </tr>
   <tr>
-    <td>Export: frames, sheets, sequences and animated files</td>
-    <td>Windows high contrast, as Pikslar's test switch draws it</td>
+    <td align="center"><sub>Export: frames, sheets, sequences and animated files</sub></td>
+    <td align="center"><sub>Windows high contrast</sub></td>
   </tr>
 </table>
 
 ## Status
 
-**0.9.0 beta, the first Windows beta. There is no public release or download yet.** A small,
-invited beta on Windows 11 is being prepared, followed by a first round of hands-on usability
-sessions with artists.
+> [!NOTE]
+> **0.9.0 beta, the first Windows beta.** There is no public release or download yet. A small,
+> invited beta on Windows 11 is being prepared, followed by a first round of hands-on usability
+> sessions with artists.
 
-| | |
+| Area | Status |
 |---|---|
 | Windows 11 (64-bit) | Tested on one computer, by automation |
 | Windows 10 1703 or later (64-bit) | Expected to run; not yet tested |
@@ -70,7 +107,12 @@ sessions with artists.
 | Screen readers, pen tablets | Not supported |
 | Code signing | Not signed; SmartScreen warns on first start |
 
-### Recent changes
+Everything known to be missing or untested is listed in
+[KNOWN-ISSUES.txt](docs/release/KNOWN-ISSUES.txt).
+
+<details>
+<summary><b>Recent changes</b></summary>
+<br>
 
 - **Interface refinement.** Status line and hints that fit at 150 % text and Large text; the
   four workspace layouts adapt to narrow windows and 2x scaling instead of clipping panels;
@@ -83,47 +125,44 @@ sessions with artists.
   before saving over a changed file on slow storage, Pikslar waits at most 5 seconds for its
   check and then asks, instead of holding the window.
 
-### Measured
+</details>
 
-Measured on the development computer with the beta build: the executable is about 3 MB, its
-window exists about 21 ms after it starts (median), input reaches the screen in about 3 ms
-(median), and it uses no processor time when idle. These are test results from one Windows 11
-computer, not guarantees. The full list of what is known to be missing or untested is in
-[docs/release/KNOWN-ISSUES.txt](docs/release/KNOWN-ISSUES.txt).
+## Build and run
 
-## Build
-
-Windows 10 or 11 (64-bit), Rust for the `x86_64-pc-windows-gnu` target, and a MinGW-w64 linker.
+You need Windows 10 or 11 (64-bit), Rust for the `x86_64-pc-windows-gnu` target, and a
+MinGW-w64 linker.
 
 ```powershell
 cargo run --release -p pikslar
 ```
 
-Open a file directly with `pikslar sprite.piks` or `pikslar image.png`. Release packages are built
-reproducibly by `spikes/make-release.ps1`; see [docs/b1-packaging.md](docs/b1-packaging.md).
+Open a file directly with `pikslar sprite.piks` or `pikslar image.png`.
+
+<details>
+<summary><b>Release packages and the performance gate</b></summary>
+<br>
+
+Release packages are built reproducibly by `spikes/make-release.ps1`; see
+[docs/b1-packaging.md](docs/b1-packaging.md).
 
 `cargo run --release -p pikslar-bench` runs the performance gate against
 [perf/baseline.txt](perf/baseline.txt).
 
-## Documentation
+</details>
 
-- [Using the beta](docs/release/README.txt): requirements, checking your copy, what Pikslar writes and where, the command line
-- [Keyboard shortcuts and command-line options](docs/shortcuts.md)
-- [Release notes](docs/release/RELEASE-NOTES.txt) and [known issues](docs/release/KNOWN-ISSUES.txt)
-- [Export and the command-line tool](docs/export-and-cli.md), [scripting](docs/scripting-api.md), [plugins](docs/plugins.md)
-- [All documentation](docs/README.md)
-
-## Layout
+<details>
+<summary><b>Project layout</b></summary>
+<br>
 
 | Crate | Purpose |
 |---|---|
+| `pikslar` | The editor |
 | `pikslar-core` | Documents, tools, undo history, selections, animation, tilemaps |
 | `pikslar-render` | Compositing and the zoomed display |
 | `pikslar-format` | Project files, PNG and compression |
 | `pikslar-export` | GIF, APNG, sheets and the other export formats |
 | `pikslar-platform` | The Win32 window, input, dialogs and clipboard |
 | `pikslar-ui` | Font, icons, widgets and the Lightbox theme |
-| `pikslar` | The editor |
 | `pikslar-cli` | The command-line tool |
 | `pikslar-script`, `pikslar-api`, `pikslar-bind` | The scripting language, its API and running scripts on a document |
 | `pikslar-plugin`, `pikslar-json` | Plugin manifests and review; a small JSON reader and writer |
@@ -131,9 +170,21 @@ reproducibly by `spikes/make-release.ps1`; see [docs/b1-packaging.md](docs/b1-pa
 | `pikslar-res` | Windows resources (icon, version, manifest), at build time only |
 | `pikslar-bench`, `pikslar-safety` | The performance gate; file-corpus and malformed-input checks |
 
+</details>
+
+## Documentation
+
+| Document | What it covers |
+|---|---|
+| [Using the beta](docs/release/README.txt) | Requirements, checking your copy, what Pikslar writes and where |
+| [Keyboard shortcuts](docs/shortcuts.md) | Every shortcut and command-line option |
+| [Release notes](docs/release/RELEASE-NOTES.txt) · [Known issues](docs/release/KNOWN-ISSUES.txt) | What is in the beta and what is not |
+| [Export and CLI](docs/export-and-cli.md) · [Scripting](docs/scripting-api.md) · [Plugins](docs/plugins.md) | Going further |
+| [All documentation](docs/README.md) | The full index |
+
 ## Licence
 
-Pikslar is source-available under the [PolyForm Noncommercial License 1.0.0](LICENSE.md): you may use,
-copy, change and share it for any noncommercial purpose. Commercial use needs separate permission.
-Third-party components in the program files are listed with their own licences in
-[docs/release/THIRD-PARTY-NOTICES.txt](docs/release/THIRD-PARTY-NOTICES.txt).
+Pikslar is source-available under the [PolyForm Noncommercial License 1.0.0](LICENSE.md): you
+may use, copy, change and share it for any noncommercial purpose. Commercial use needs separate
+permission. Third-party components in the program files are listed with their own licences in
+[THIRD-PARTY-NOTICES.txt](docs/release/THIRD-PARTY-NOTICES.txt).
