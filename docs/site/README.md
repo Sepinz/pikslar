@@ -45,7 +45,7 @@ To make it again after the screenshots change (Windows PowerShell, System.Drawin
 canvas's rectangle inside the screenshot, in the screenshot's own pixels:
 
 ```powershell
-powershell -NoProfile -File docs\site\make-social-preview.ps1 -Shot site\assets\img\editor-2x.png -Crop "492,166,576,576" -Out site\assets\og.png
+powershell -NoProfile -File docs\site\make-social-preview.ps1 -Shot site\assets\img\editor-2x.png -Crop "640,222,576,576" -Out site\assets\og.png
 ```
 
 ## Keeping it current
