@@ -25,7 +25,7 @@
 <br>
 
 <p align="center">
-  <img src="site/assets/img/editor-2x.png" width="100%" alt="The Pikslar window: tools on the left, a pixel-art mushroom house on the canvas, palette and preview panels on the right, and the timeline below.">
+  <img src="docs/readme/editor-2x.png" width="100%" alt="The Pikslar window: tools on the left, a pixel-art night scene of a lake village under a crescent moon on the canvas, colour, palette and layer panels on the right.">
 </p>
 
 <p align="center">
@@ -81,10 +81,15 @@ Every control is reachable from the keyboard, shortcuts can be changed, and the 
 Windows high contrast and text size. Experimental in this beta: read-only Aseprite import,
 scripting, plugins and Rewind (undo history kept after closing).
 
+<p align="center">
+  <img src="docs/readme/animate-2x.png" width="100%" alt="The Animate workspace: a walking wizard sprite on the canvas, a live preview on the right, and the timeline below with idle and walk tags over twelve frames.">
+  <sub>Animate: tagged idle and walk cycles on the timeline, with a live preview</sub>
+</p>
+
 <table>
   <tr>
-    <td width="50%"><img src="site/assets/img/export-1x.png" alt="The Export dialog over the Pikslar window."></td>
-    <td width="50%"><img src="site/assets/img/contrast-black-1x.png" alt="Pikslar drawn in Windows high-contrast colours."></td>
+    <td width="50%"><img src="docs/readme/export-1x.png" alt="The Export dialog over the night scene."></td>
+    <td width="50%"><img src="docs/readme/contrast-black-1x.png" alt="Pikslar drawn in Windows high-contrast colours, with the night scene on the canvas."></td>
   </tr>
   <tr>
     <td align="center"><sub>Export: frames, sheets, sequences and animated files</sub></td>
